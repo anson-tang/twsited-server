@@ -1,3 +1,4 @@
+etc/setting_env.py
 *.pyc
 *.log
 *.pid
