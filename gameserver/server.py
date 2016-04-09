@@ -16,7 +16,7 @@ class Server(ServerFactory):
         print '=============================\n'
         print '*   Game Server Start!   *\n'
         print '============================='
-        #load_all_handlers(dirname(abspath(__file__)) + '/', 'handler')
+        load_all_handlers(dirname(abspath(__file__)) + '/', 'handler')
  
     def cleanup(self):
         pass
@@ -28,6 +28,5 @@ class Server(ServerFactory):
 
         try:
             pass
-            #g_UserMgr.stop()
         except:
             log.exception()

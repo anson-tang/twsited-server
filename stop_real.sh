@@ -6,5 +6,5 @@ GAME=game.pid
 
 if [ -e $GAME ]; then
     kill `cat $GAME`
-    echo "Stopped $GAME"
+    echo "Stopped Server ... PID: $PWD/$GAME"
 fi
