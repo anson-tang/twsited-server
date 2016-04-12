@@ -16,6 +16,7 @@ from twisted.internet import protocol, reactor, defer
 from rpc import GeminiRPCProtocol
 
 
+
 class ConnectorCreator(protocol.ClientCreator):
     def __init__(self, service, *args, **kwargs):
         self.factory = service
@@ -29,7 +30,7 @@ class ConnectorCreator(protocol.ClientCreator):
         return p
 
     def errback(self, error):
-        log.error("Can't connect Server!", error)
+        print("Can't connect Server!", error)
 
 @defer.inlineCallbacks
 def service_login(p, args):
@@ -45,7 +46,7 @@ def finish(sgn):
     reactor.stop()
 
 
-HOST = '127.0.0.1'
+HOST = '120.26.229.89' #'127.0.0.1'
 PORT = 12010
 
 def connectServer():
@@ -53,7 +54,7 @@ def connectServer():
     d = conn.connect(HOST, PORT)
     print 'init d: ', d
 
-    args = (1, 'robot')
+    args = 'abcdef' #(1, 'robot')
     d.addCallbacks(service_login, errback, (args,))
     d.addCallback(finish)
 
