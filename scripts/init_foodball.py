@@ -7,24 +7,25 @@
 # Summary: 
 
 import MySQLdb
+import sys, os
+if sys.getdefaultencoding != 'utf-8':
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+
+from os.path import abspath, dirname, join, normpath
+PREFIX = normpath(dirname(abspath(__file__)))
+print "PREFIX: ", PREFIX
+for path in (PREFIX, normpath(join(PREFIX, '../lib'))):
+    if path not in sys.path:
+        sys.path = [path] + sys.path
 
 from log import log
 from setting import DB_CONF
-from systemdata import TABLES
+from systemdata import TABLES, db_config
 
 
 
-def db_config():
-    return {'host'       : DB_CONF['host'],
-            'port'       : DB_CONF['port'],
-            'user'       : DB_CONF['user'],
-            'passwd'     : DB_CONF['pass'],
-            'db'         : DB_CONF['sysconfigdb'],
-            'charset'    : 'utf8',
-            'use_unicode': True
-        }
-
-def init_data(table, values):
+def insert_mysql(table, values):
     conn   = MySQLdb.connect(**db_config())
     cursor = conn.cursor()
 
@@ -36,18 +37,24 @@ def init_data(table, values):
         return
 
     sql = 'INSERT INTO tb_%s (' % table + ','.join(fields) + ') VALUES ('  + ','.join(['%s'] * len(fields)) + ')'
-    #cursor.execute( sql )
-    cursor.insert(_sql, _values)
-    cursor.fetchall()
+    cursor.executemany(sql, values)
+    print('=========sql: {0}'.format(sql))
+    print('=========values: {0}'.format(values))
+    conn.commit()
 
     cursor.close()
     conn.close()
 
-    return result
+    return True
 
-values = [[1, 111,123, 112],
-        [2, 211, 213, 245],
-        [3, 310, 392, 278],
-        ]
+def init_ball_data():
+    pass
 
-init_data('foodball', values)
+
+if __name__ == "__main__":
+    values = [[7, 111,123, 112],
+            [8, 211, 213, 245],
+            [9, 310, 392, 278],
+            ]
+    
+    insert_mysql('foodball', values)

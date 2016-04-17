@@ -8,8 +8,9 @@ from twisted.python.log      import ILogObserver, FileLogObserver
 from twisted.python.logfile  import LogFile
 
 import sys, os
-reload(sys)
-sys.setdefaultencoding('utf-8')
+if sys.getdefaultencoding != 'utf-8':
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
 
 from os.path import abspath, dirname, join, normpath
 PREFIX = normpath(dirname(abspath(__file__)))
@@ -24,6 +25,7 @@ log.init(setting.LOG_THRESHOLD)
 
 import redis
 redis.init(setting.REDIS_CONF)
+
 
 from server import Server
 from datetime import datetime

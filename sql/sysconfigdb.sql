@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.7.12, for Linux (x86_64)
 --
--- Host: 127.0.0.1    Database: vr_server
+-- Host: 127.0.0.1    Database: vr_sysconfigdb
 -- ------------------------------------------------------
 -- Server version	5.7.12
 
@@ -16,42 +16,21 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `pvp_room`
+-- Table structure for table `foodball`
 --
 
-DROP TABLE IF EXISTS `tb_pvp_room`;
+DROP TABLE IF EXISTS `tb_foodball`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `tb_pvp_room` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `uid` int(10) DEFAULT '0',
-  `room_id` int(10) DEFAULT '0',
-  `rank` int(10) DEFAULT '0',
-  `scores` int(10) DEFAULT '0',
-  `join_time` datetime DEFAULT NULL,
-  `leave_time` datetime DEFAULT NULL,
-  `deleted` tinyint(3) DEFAULT '0',
-  PRIMARY KEY (`id`)
+CREATE TABLE `tb_foodball` (
+  `BallId` int(11) NOT NULL AUTO_INCREMENT,
+  `BallX` int(10) DEFAULT '0',
+  `BallY` int(10) DEFAULT '0',
+  `BallZ` int(10) DEFAULT '0',
+  PRIMARY KEY (`BallId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `tb_character`
---
-
-DROP TABLE IF EXISTS `tb_character`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `tb_character` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `machine_code` varchar(45) COLLATE utf8_bin DEFAULT '',
-  `nickname` varchar(45) COLLATE utf8_bin DEFAULT '',
-  `exp` int(10) DEFAULT '0',
-  `coin` int(10) DEFAULT '0',
-  `create_time` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
