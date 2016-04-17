@@ -22,6 +22,21 @@ redis = None
 def init(conf):
     global redis
 
+    redis_sock = conf.get('redis_sock', None)
+
+    if redis_sock:
+        redis_conf = dict(
+                path = redis_sock, 
+                dbid = conf['redis_db']
+                )
+    else:
+        redis_conf = dict(
+                host = conf['redis_host'],
+                port = conf['redis_port'],
+                dbid = conf['redis_db']
+                )
+
+
     if not redis:
-        redis = REDIS.lazyUnixConnectionPool(**conf)
+        redis = REDIS.lazyUnixConnectionPool(**redis_conf)
 

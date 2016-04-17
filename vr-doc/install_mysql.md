@@ -13,6 +13,13 @@ http://www.devopsservice.com/installation-of-mysql-server-5-7-on-ubuntu-14-04/
 8) shell> service mysql status
 9) shell> mysqladmin -p -u root version
 
+
+
+---------------------------------
+ImportError: No module named MySQLdb
+$ apt-get install python-mysqldb
+
+
 ---------------------------------
 1) mysql> create database vr_server character set utf8 collate utf8_bin;
 Query OK, 1 row affected (0.00 sec)

@@ -5,6 +5,8 @@
 # Author: Anson Tang <anson.tkg@gmail.com>
 # License: Copyright(c) 2015 Anson.Tang
 # Summary: 
+
+from twisted.internet import defer
 from time import time
 from log import log
 from errorno import *
@@ -35,7 +37,7 @@ class Character(object):
             return getattr(self.attrib, name)
         return 0
 
-    @gen.coroutine
+    @defer.inlineCallbacks
     def load(self):
         if not self.attrib:
             if self._loading is False:
@@ -53,7 +55,7 @@ class Character(object):
                 self._futures.append(_f)
                 yield _f
  
-    @gen.coroutine
+    @defer.inlineCallbacks
     def new(self, nickname):
         self.attrib = Attribute(self._table)
         yield self.attrib.new(id=self.uid, nickname=nickname, exp=10, coin=10)
