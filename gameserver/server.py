@@ -9,8 +9,10 @@ from twisted.internet.protocol import ServerFactory
 from twisted.internet import protocol, reactor, defer
 
 from rpc import GeminiRPCProtocol, load_all_handlers
+from redis import redis
 from log import log
 from redis_constant import *
+
 
 
 class Server(ServerFactory):
@@ -27,14 +29,13 @@ class Server(ServerFactory):
     @defer.inlineCallbacks
     def __migrate_accounts_registered(self):
         try:
-            yield redis.delete( HASH_NICKNAME_REGISTERED )
-            yield redis.delete( SET_MACHINE_CODE_REGISTERED )
+            yield redis.delete( HASH_NICKNAME_REGISTERED, SET_MACHINE_CODE_REGISTERED )
 
             db_conf = {'host': setting.DB_CONF['host'],
                 'port'       : setting.DB_CONF['port'],
                 'user'       : setting.DB_CONF['user'],
                 'passwd'     : setting.DB_CONF['pass'],
-                'db'         : setting.DB_CONF['db_userdb'],
+                'db'         : setting.DB_CONF['userdb'],
                 'charset'    : 'utf8'
                 }
 

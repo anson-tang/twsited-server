@@ -8,3 +8,11 @@
 8)  $ cd redis-3.0.7/utils
 9)  $ ./install_server.sh
 10) $ service redis_6379 status
+
+-------------------------------
+open bind 127.0.0.1
+update requirepass
+update port
+update rename-command CONFIG ""
+run not root
+
