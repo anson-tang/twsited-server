@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 #-*-coding: utf-8-*-
 
+import MySQLdb
+import setting
+
 from os.path import abspath, dirname
 from twisted.internet.protocol import ServerFactory
 from twisted.internet import protocol, reactor, defer
@@ -24,15 +27,14 @@ class Server(ServerFactory):
     @defer.inlineCallbacks
     def __migrate_accounts_registered(self):
         try:
-            yield redis.delete( HASH_ACCOUNT_REGISTERED )
             yield redis.delete( HASH_NICKNAME_REGISTERED )
-            yield redis.delete( SET_CID_REGISTERED )
+            yield redis.delete( SET_MACHINE_CODE_REGISTERED )
 
-            db_conf = {'host': DB['host'],
-                'port'       : DB['port'],
-                'user'       : DB['user'],
-                'passwd'     : DB['pass'],
-                'db'         : DB['db_userdb'],
+            db_conf = {'host': setting.DB_CONF['host'],
+                'port'       : setting.DB_CONF['port'],
+                'user'       : setting.DB_CONF['user'],
+                'passwd'     : setting.DB_CONF['pass'],
+                'db'         : setting.DB_CONF['db_userdb'],
                 'charset'    : 'utf8'
                 }
 
