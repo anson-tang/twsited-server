@@ -27,13 +27,15 @@ def init(conf):
     if redis_sock:
         redis_conf = dict(
                 path = redis_sock, 
-                dbid = conf['redis_db']
+                dbid = conf['redis_db'],
+                password = conf['redis_passwd']
                 )
     else:
         redis_conf = dict(
                 host = conf['redis_host'],
                 port = conf['redis_port'],
-                dbid = conf['redis_db']
+                dbid = conf['redis_db'],
+                password = conf['redis_passwd']
                 )
 
 

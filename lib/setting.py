@@ -31,7 +31,8 @@ REDIS_CONF = {
         'redis_sock'   : '/tmp/redis.sock',  #Redis服务器Unix Socket地址。如果没有启用，请置空。
         'redis_host'   : '127.0.0.1',        #当redis_sock为空时，Redis服务器TCP地址, 最好使用局域网，不要开放到外网
         'redis_port'   : 6379,               #当redis_sock为空时，Redis服务器TCP端口
-        'redis_db'     : 2                   #本服使用的Redis服务器db序号
+        'redis_db'     : 2,                   #本服使用的Redis服务器db序号
+        'redis_passwd' : 'Redis.Passwd',
     }
 
 SERVER_ID = 101
