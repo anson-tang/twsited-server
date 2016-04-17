@@ -38,6 +38,10 @@ class Character(object):
             return getattr(self.attrib, name)
         return 0
 
+    def info(self):
+        log.debug("value:{0}".format(self.attrib.value))
+        return self.attrib.value
+
     @defer.inlineCallbacks
     def load(self):
         if not self.attrib:

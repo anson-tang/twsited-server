@@ -15,4 +15,4 @@ update requirepass
 update port
 update rename-command CONFIG ""
 run not root
-
+redis-cli -p 10379 -a Redis.Passwd
