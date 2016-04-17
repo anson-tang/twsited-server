@@ -10,10 +10,13 @@ from twisted.internet import defer
 
 from rpc import route
 from log import log
+from manager.character import Character
 
 
 @route()
 def login(p, req):
     log.debug("client: ", p)
     log.debug("req: ", req)
+    machine_code = req
+    #character_mgr = Character()
     return 0, 'test success'
