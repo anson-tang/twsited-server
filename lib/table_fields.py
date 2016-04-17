@@ -14,7 +14,7 @@ TABLE_NO_AI = ('character', )
 TABLE_FIELDS = {
     'character': (('id', 'machine_code', 'nickname', 'exp', 'coin', 'create_time'),
         ('create_time',)),
-    'pvp_room': (('id', 'room_id', 'rank', 'scores', 'join_time', 'leave_time', 'deleted'),
+    'pvp_room': (('id', 'uid', 'room_id', 'rank', 'scores', 'join_time', 'leave_time', 'deleted'),
         ('join_time', 'leave_time')),
 }
 
