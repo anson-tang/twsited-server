@@ -41,7 +41,11 @@ def sync_dirty_attributes(queue, loop=True):
                 break
             except:
                 pass
-    reactor.callLater(SYNC_DB_INTERVAL, sync_dirty_attributes, queue)
+    if loop:
+        reactor.callLater(SYNC_DB_INTERVAL, sync_dirty_attributes, queue)
+    else:
+        log.debug('End sync db, dirty attributes length {0}, loop:{1}'.format(
+            queue.qsize(), loop))
 
 
 try:
@@ -101,7 +105,7 @@ class Attribute(object): #Present one row in db
     def attrib_id(self):
         return self.__attrib_id
 
-    @gen.coroutine
+    @defer.inlineCallbacks
     def new(self, **kwargs):
         _dirty_fields = []
         _values = []
@@ -136,10 +140,10 @@ class Attribute(object): #Present one row in db
             self.__attrib_id = kwargs['id']
         else:
             self.__attrib_id = yield POOL.insert(_sql, _values)
-        raise gen.Return(self.__attrib_id)
+        raise defer.returnValue(self.__attrib_id)
 
     @staticmethod
-    @gen.coroutine
+    @defer.inlineCallbacks
     def load(name, where=None, multirow=False):
         fields = TABLE_FIELDS[name][0]
         where = dict() if where is None else where
@@ -153,19 +157,19 @@ class Attribute(object): #Present one row in db
 
         attribs  = {}
         if not _dataset:
-            raise gen.Return(attribs if multirow else None)
+            raise defer.returnValue(attribs if multirow else None)
 
         if multirow is False:
             _attr = Attribute(name)
             _attr.update(False, **dict(zip(fields, _dataset[0])))
-            raise gen.Return(_attr)
+            raise defer.returnValue(_attr)
 
         for row in _dataset:
             _attr = Attribute(name)
             _attr.update(False, **dict(zip(fields, row)))
             attribs[_attr.attrib_id] = _attr
 
-        raise gen.Return(attribs)
+        raise defer.returnValue(attribs)
 
     def update(self, _dirty=False, **kwargs):
         if 'id' in kwargs:
@@ -224,24 +228,24 @@ class Attribute(object): #Present one row in db
 
         return _sql, values
 
-    @gen.coroutine
+    @defer.inlineCallbacks
     def syncdb(self):
         if self.__dirty:
             _dirty_fields = self.__dirty_fields[:]
 
             if len(_dirty_fields) == 0 and False == self.__del:
                 LOG.info('no dirty_fields! table name:{0}, attrib_id:{1}.'.format( self.table, self.__attrib_id ))
-                raise gen.Return(None)
+                raise defer.returnValue(None)
 
             _sql = ''
 
             try:
                 if self.__del:
-                    db.execute('DELETE FROM {0} WHERE id={1};'.format(self.table, self.__attrib_id))
+                    yield db.execute('DELETE FROM {0} WHERE id={1};'.format(self.table, self.__attrib_id))
                 else:
                     _sql, _v = self.__gen_update_value(_dirty_fields)
                     if _v:
-                        yield POOL.update(_sql, _v)
+                        yield POOL.execute(_sql, _v)
                     else:
                         LOG.warn('Update error. table: {0}, cid: {1}, sql: {2}, dirty: {3}.'.format(\
                             self.table, self.__attrib_id, _sql, self.__dirty_fields))
