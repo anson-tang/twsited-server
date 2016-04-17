@@ -18,11 +18,12 @@ from attribute import Attribute
 class Character(object):
     # 玩家下线时需要删除的对象list
     _del_attr = []
-    def __init__(self, uid, nickname):
-        self.uid = uid
-        self.nickname = nickname
+    def __init__(self, uid=None, machine_code=None, nickname=None):
+        self.uid = uid if uid else 0
+        self.machine_code = machine_code if machine_code else ''
+        self.nickname = nickname if nickname else ''
         self._table = 'character'
-        self._where = {'id': uid}
+        self._where = {'machine_code': machine_code}
         self._multirow = False
         self.attrib = None
         self._loading = False
@@ -56,10 +57,11 @@ class Character(object):
                 yield _f
  
     @defer.inlineCallbacks
-    def new(self, nickname):
+    def new(self, machine_code, nickname):
         self.attrib = Attribute(self._table)
-        yield self.attrib.new(id=self.uid, nickname=nickname, exp=10, coin=10)
+        yield self.attrib.new(machine_code=machine_code, nickname=nickname, exp=10, coin=10)
         self.nickname = nickname
+        self.machine_code = machine_code
 
     def logout(self):
         LOG.info("user(%s) logout." % self.uid)
