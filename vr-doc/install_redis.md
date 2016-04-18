@@ -1,3 +1,4 @@
+0)  $ sudo apt-get install -y make gcc python-dev
 1)  $ wget http://download.redis.io/releases/redis-3.0.7.tar.gz
 2)  $ tar xzf redis-3.0.7.tar.gz
 3)  $ cd redis-3.0.7/deps
