@@ -9,3 +9,4 @@
 NO_ERROR           = 0
 UNKNOWN_ERROR      = 1
 
+MACHINE_CODE_ERROR = 2 

@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.7.12, for Linux (x86_64)
 --
--- Host: 127.0.0.1    Database: vr_server
+-- Host: localhost    Database: vr_server
 -- ------------------------------------------------------
 -- Server version	5.7.12
 
@@ -14,26 +14,6 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
---
--- Table structure for table `pvp_room`
---
-
-DROP TABLE IF EXISTS `tb_pvp_room`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `tb_pvp_room` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `uid` int(10) DEFAULT '0',
-  `room_id` int(10) DEFAULT '0',
-  `rank` int(10) DEFAULT '0',
-  `scores` int(10) DEFAULT '0',
-  `join_time` datetime DEFAULT NULL,
-  `leave_time` datetime DEFAULT NULL,
-  `deleted` tinyint(3) DEFAULT '0',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `tb_character`
@@ -52,6 +32,26 @@ CREATE TABLE `tb_character` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `tb_pvp_room`
+--
+
+DROP TABLE IF EXISTS `tb_pvp_room`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `tb_pvp_room` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(10) DEFAULT '0',
+  `room_id` int(10) DEFAULT '0',
+  `rank` int(10) DEFAULT '0',
+  `scores` int(10) DEFAULT '0',
+  `join_time` datetime DEFAULT NULL,
+  `leave_time` datetime DEFAULT NULL,
+  `deleted` tinyint(3) DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -62,4 +62,4 @@ CREATE TABLE `tb_character` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-04-17 18:32:03
+-- Dump completed on 2016-04-21  2:13:29

@@ -2,6 +2,7 @@ do it as
 https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-14-04
 http://www.devopsservice.com/installation-of-mysql-server-5-7-on-ubuntu-14-04/
 
+root/abcd.1234
 ----------------------------------
 1) shell> sudo wget http://dev.mysql.com/get/mysql-apt-config_0.6.0-1_all.deb
 2) shell> sudo dpkg -i mysql-apt-config_0.6.0-1_all.deb

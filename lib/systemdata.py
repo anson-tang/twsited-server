@@ -15,6 +15,19 @@ from constant import *
 
 
 
+def ball_data_handler(table, fields, dataset):
+    data = []
+    radius = COMMON_RADIUS * 10**PRECISION
+    for bid, bx, by, bz in iter(dataset):
+        bx = bx * 1.0 / radius if bx else 0
+        by = by * 1.0 / radius if by else 0
+        bz = bz * 1.0 / radius if bz else 0
+        data.append((bid, bx, by, bz))
+
+    return data
+
+
+
 def randname_data_handler(table, fields, dataset):
     data = [[], []]
 
@@ -29,8 +42,8 @@ def randname_data_handler(table, fields, dataset):
 
 
 TABLES = (
-        (FOR_ALL, 'foodball', ('BallId', 'BallX', 'BallY', 'BallZ'), None, None),
-        (FOR_ALL, 'spineball', ('BallId', 'BallX', 'BallY', 'BallZ'), None, None),
+        (FOR_ALL, 'foodball', ('BallId', 'BallX', 'BallY', 'BallZ'), None, ball_data_handler),
+        (FOR_ALL, 'spineball', ('BallId', 'BallX', 'BallY', 'BallZ'), None, ball_data_handler),
     )
 
 

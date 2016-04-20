@@ -6,11 +6,13 @@
 # License: Copyright(c) 2015 Anson.Tang
 # Summary: 
 
-import MySQLdb
 import sys, os
 if sys.getdefaultencoding != 'utf-8':
     reload(sys)
     sys.setdefaultencoding('utf-8')
+import random
+import math
+import MySQLdb
 
 from os.path import abspath, dirname, join, normpath
 PREFIX = normpath(dirname(abspath(__file__)))
@@ -22,12 +24,15 @@ for path in (PREFIX, normpath(join(PREFIX, '../lib'))):
 from log import log
 from setting import DB_CONF
 from systemdata import TABLES, db_config
+from constant import *
 
 
 
 def insert_mysql(table, values):
     conn   = MySQLdb.connect(**db_config())
     cursor = conn.cursor()
+    del_sql = 'TRUNCATE TABLE tb_%s;' % table
+    cursor.execute(del_sql)
 
     fields = ''
     for _line in TABLES:
@@ -36,25 +41,41 @@ def insert_mysql(table, values):
     if not fields:
         return
 
-    sql = 'INSERT INTO tb_%s (' % table + ','.join(fields) + ') VALUES ('  + ','.join(['%s'] * len(fields)) + ')'
-    cursor.executemany(sql, values)
-    print('=========sql: {0}'.format(sql))
-    print('=========values: {0}'.format(values))
+    insert_sql = 'INSERT INTO tb_%s (' % table + ','.join(fields) + ') VALUES ('  + ','.join(['%s'] * len(fields)) + ')'
+    cursor.executemany(insert_sql, values)
+    #print('=========sql: {0}'.format(insert_sql))
+    #print('=========values: {0}'.format(values))
     conn.commit()
 
     cursor.close()
     conn.close()
 
-    return True
 
-def init_ball_data():
-    pass
+
+def init_ball_data(table, count):
+    if not (table and radius and count):
+        print "fail............."
+        return
+
+    try:
+        values = list()
+        radius = COMMON_RADIUS * 10**PRECISION
+        for i in xrange(1, count+1):
+            x = random.randint(-radius, radius)
+            y = random.choice((-1, 1)) * int(math.sqrt(radius**2 - x**2))
+            z = random.choice((-1, 1)) * int(math.sqrt(radius**2 - x**2 - y**2))
+            values.append((i,x,y,z))
+
+        insert_mysql(table, values)
+    except Exception as e:
+        print "error: ", e
+        print "radius:%s, count:%s, x:%s, y:%s, z:%s." % (radius, count, x, y, z)
+
 
 
 if __name__ == "__main__":
-    values = [[7, 111,123, 112],
-            [8, 211, 213, 245],
-            [9, 310, 392, 278],
-            ]
-    
-    insert_mysql('foodball', values)
+    # init foodball data
+    init_ball_data('foodball', 1000)
+
+    # init foodball data
+    init_ball_data('spineball', 20)

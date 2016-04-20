@@ -22,12 +22,15 @@ def login(p, req):
     log.debug("client: ", p)
     log.debug("req: ", req)
     machine_code, = req
+    if not machine_code:
+        defer.returnValue((MACHINE_CODE_ERROR, {}))
 
     uid = yield redis.hget(HASH_MACHINE_CODE_REGISTERED, machine_code)
     info = dict()
     # 创建新玩家
     if not uid:
-        nickname = 'hiwo'
+        #TODO random nickname
+        nickname = machine_code
         character_mgr = Character(0, machine_code, nickname)
         uid = character_mgr.uid
         yield character_mgr.new(machine_code, nickname)

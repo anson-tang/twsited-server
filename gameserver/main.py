@@ -26,7 +26,6 @@ log.init(setting.LOG_THRESHOLD)
 import redis
 redis.init(setting.REDIS_CONF)
 
-
 from server import Server
 from datetime import datetime
 
