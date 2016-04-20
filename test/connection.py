@@ -39,6 +39,13 @@ def service_login(p, args):
     print "login return data: ", data, type(data)
     defer.returnValue(0)
 
+@defer.inlineCallbacks
+def join_pvp(p, args):
+    data = yield p.call('joinPVP', args)
+    print "login p: ", p, "args: ", args
+    print "login return data: ", data, type(data)
+    defer.returnValue(0)
+
 def errback(error):
     print "error: ", error
 
@@ -54,8 +61,9 @@ def connectServer():
     d = conn.connect(HOST, PORT)
     print 'init d: ', d
 
-    args = 'abcdef' #(1, 'robot')
-    d.addCallbacks(service_login, errback, (args,))
+    args = ''
+    #d.addCallbacks(service_login, errback, (args,))
+    d.addCallbacks(join_pvp, errback, (args,))
     d.addCallback(finish)
 
 
