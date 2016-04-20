@@ -8,7 +8,7 @@
 # about deleted: when 1-invalid 0-normal
 
 TABLE_HAD_DELETED = ('pvp_room', )
-TABLE_NO_AI = ('character', )
+TABLE_NO_AI = ()
 
 
 TABLE_FIELDS = {
