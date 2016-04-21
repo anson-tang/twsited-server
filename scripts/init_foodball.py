@@ -53,17 +53,18 @@ def insert_mysql(table, values):
 
 
 def init_ball_data(table, count):
-    if not (table and radius and count):
+    if not (table and count):
         print "fail............."
         return
 
     try:
         values = list()
-        radius = COMMON_RADIUS * 10**PRECISION
+        radius = COMMON_RADIUS * COORDINATE_ENLARGE / RADIUS_ENLARGE
         for i in xrange(1, count+1):
-            x = random.randint(-radius, radius)
-            y = random.choice((-1, 1)) * int(math.sqrt(radius**2 - x**2))
-            z = random.choice((-1, 1)) * int(math.sqrt(radius**2 - x**2 - y**2))
+            y = random.randint(-radius, radius)
+            max_z = int(math.sqrt(radius**2 - y**2))
+            z = random.randint(-max_z, max_z)
+            x = random.choice((-1, 1)) * int(math.sqrt(radius**2 - y**2 - z**2))
             values.append((i,x,y,z))
 
         insert_mysql(table, values)
