@@ -148,7 +148,9 @@ def constant_data():
             'FOODBALL_RADIUS': FOODBALL_RADIUS,
             'SPINEBALL_RADIUS': SPINEBALL_RADIUS,
             'USERBALL_RADIUS': USERBALL_RADIUS,
-            }
+            'COMMON_RADIUS': COMMON_RADIUS,
+            'PRECISION': PRECISION,
+        }
     return constant_data
 
 if __name__ == '__main__':

@@ -12,6 +12,7 @@ from rpc import route
 from log import log
 from redis import redis
 from redis_constant import *
+from systemdata import constant_data
 from manager.character import Character
 from manager.gameuser import g_UserMgr
 
@@ -48,4 +49,5 @@ def login(p, req):
         if user:
             info = user.character_mgr.info()
 
+    info.update({'constants':constant_data()})
     defer.returnValue((0, info))
