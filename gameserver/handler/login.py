@@ -33,8 +33,9 @@ def login(p, req):
         #TODO random nickname
         nickname = machine_code
         character_mgr = Character(0, machine_code, nickname)
-        uid = character_mgr.uid
         yield character_mgr.new(machine_code, nickname)
+
+        uid = character_mgr.uid
         yield redis.hset(HASH_NICKNAME_REGISTERED, nickname, uid)
         yield redis.hset(HASH_MACHINE_CODE_REGISTERED, machine_code, uid)
         info = character_mgr.info()

@@ -16,7 +16,11 @@ from constant import *
 
 
 def ball_data_handler(table, fields, dataset):
-    return dataset
+    data = dict()
+    for row in dataset:
+        data[row[0]] = row
+
+    return data
 
 
 

@@ -41,9 +41,12 @@ def service_login(p, args):
 
 @defer.inlineCallbacks
 def join_pvp(p, args):
-    data = yield p.call('joinPVP', args)
+    error, data = yield p.call('joinPVP', args)
     print "login p: ", p, "args: ", args
-    print "login return data: ", data, type(data)
+    print "error: ", error
+    print "login return data: "
+    for _key in data.keys():
+        print '\t', _key, len(data[_key])
     defer.returnValue(0)
 
 def errback(error):
@@ -61,8 +64,9 @@ def connectServer():
     d = conn.connect(HOST, PORT)
     print 'init d: ', d
 
-    args = ''
+    #args = ['kkkkkkk']
     #d.addCallbacks(service_login, errback, (args,))
+    args = ''
     d.addCallbacks(join_pvp, errback, (args,))
     d.addCallback(finish)
 

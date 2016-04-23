@@ -43,3 +43,4 @@ RADIUS_ENLARGE = 10 # 半径放大的倍数
 COORDINATE_ENLARGE = 10000 # 坐标放大的倍数
 COMMON_HIGHT = 10 # 默认高度，高度小于COMMON_RADIUS 表示为去掉顶部和底部某些区域的点.
 
+MAX_ROOM_COUNT = 20 # 房间最大玩家人数

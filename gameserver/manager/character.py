@@ -64,6 +64,7 @@ class Character(object):
     def new(self, machine_code, nickname):
         self.attrib = Attribute(self._table)
         yield self.attrib.new(machine_code=machine_code, nickname=nickname, exp=10, coin=10)
+        self.uid = self.attrib.attrib_id
         self.nickname = nickname
         self.machine_code = machine_code
 

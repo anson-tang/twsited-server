@@ -17,7 +17,7 @@ except NameError:
 
 
 def get_all_foodball():
-    return sysconfig.get('foodball', list())
+    return sysconfig.get('foodball', dict())
 
 def get_all_spineball():
-    return sysconfig.get('spineball', list())
+    return sysconfig.get('spineball', dict())
