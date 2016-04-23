@@ -62,9 +62,9 @@ def init_ball_data(table, count):
         radius = COMMON_RADIUS * COORDINATE_ENLARGE / RADIUS_ENLARGE
         for i in xrange(1, count+1):
             y = random.randint(-radius, radius)
-            max_z = int(math.sqrt(radius**2 - y**2))
+            max_z = int(math.sqrt(pow(radius,2) - pow(y,2)))
             z = random.randint(-max_z, max_z)
-            x = random.choice((-1, 1)) * int(math.sqrt(radius**2 - y**2 - z**2))
+            x = random.choice((-1, 1)) * int(math.sqrt(pow(radius,2) - pow(y,2) - pow(z,2)))
             values.append((i,x,y,z))
 
         insert_mysql(table, values)

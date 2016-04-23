@@ -66,7 +66,7 @@ def connectServer():
 
     #args = ['kkkkkkk']
     #d.addCallbacks(service_login, errback, (args,))
-    args = ''
+    args = [2]
     d.addCallbacks(join_pvp, errback, (args,))
     d.addCallback(finish)
 

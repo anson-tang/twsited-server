@@ -79,13 +79,13 @@ class GameUserMgr(object):
             self.max_cnt = _total
         return True
 
-    def getUserByCid(self, uid):
+    def getUserByUid(self, uid):
         if uid in self.all_users:
             return self.all_users[uid]
         else:
             return None
 
-    def delUserByCid(self, uid):
+    def delUserByUid(self, uid):
         user = self.all_users.get(uid, None)
         if user:
             del self.all_users[uid]
@@ -188,7 +188,7 @@ class GameUserMgr(object):
             log.debug('logout uid: {0}, temp_lost: {1}, logout_timestamp: {2}, now_timestamp: {3}.'.format(\
                     uid, user.temp_lost, user.logout_timestamp, now_timestamp) )
             if user.temp_lost and user.logout_timestamp == now_timestamp:
-                self.delUserByCid( uid )
+                self.delUserByUid( uid )
                 log.debug('User logout real. uid: {0}.'.format( uid ))
         else:
             log.error('User had logout. uid: {0}.'.format( uid ))
@@ -210,7 +210,7 @@ class GameUserMgr(object):
             else:
                 log.warn('__broadcast. uid:{0}, the user has no p attribute..'.format(_user.uid))
 
-            self.delUserByCid( uid )
+            self.delUserByUid( uid )
             log.warn('Del zombie user success. uid: {0}.'.format( uid ))
         defer.returnValue( NO_ERROR )
 
@@ -230,7 +230,7 @@ class GameUserMgr(object):
     def kickoutUser(self, uid):
         _user = self.all_users.get(uid, None)
         if _user:
-            self.delUserByCid( uid )
+            self.delUserByUid( uid )
 
         defer.returnValue( NO_ERROR )
 

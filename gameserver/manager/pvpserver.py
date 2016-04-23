@@ -24,6 +24,7 @@ class PVPServer(object):
         @return: all balls in current room.
         '''
         if not self.__curr_room:
+            # new a room
             _room_id = len(self.__rooms) + 1
             self.__curr_room = PVPRoom(_room_id)
             self.__rooms[_room_id] = self.__curr_room
@@ -37,16 +38,13 @@ class PVPServer(object):
     def curr_room_id(self):
         return self.__curr_room.room_id 
 
+    def getRoomByUid(self, uid):
+        for _room in self.__rooms.itervalues():
+            if _room.isMember(uid):
+                return _room
+        return None
+
     def disbandRoom(self):
-        pass
-
-    def syncUserball(self):
-        pass
-
-    def syncSpingball(self):
-        pass
-
-    def updateFoodball(self):
         pass
 
 

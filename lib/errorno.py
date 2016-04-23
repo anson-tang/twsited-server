@@ -10,3 +10,7 @@ NO_ERROR           = 0
 UNKNOWN_ERROR      = 1
 
 MACHINE_CODE_ERROR = 2 
+CONNECTION_LOSE = 3 # 失去连接 客户端请重新登录
+PVPROOM_LOSE = 4 # 不在PVP模式，客户端重新进入PVP
+
+
