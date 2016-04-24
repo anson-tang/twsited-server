@@ -12,6 +12,7 @@ from rpc import route
 from log import log
 from constant import *
 from errorno import *
+from manager.gameuser import g_UserMgr
 from manager.pvpserver import g_PVPServer
 
 
@@ -25,9 +26,9 @@ def joinPVP(p, req):
         log.error('client has not found uid.')
         uid, = req
 
-    #user = g_UserMgr.getUserBYUid(uid)
-    #if not user:
-    #    return CONNECTION_LOSE, None
+    user = g_UserMgr.getUserByUid(uid)
+    if not user:
+        return CONNECTION_LOSE, None
 
     _u, _f, _s = g_PVPServer.joinRoom(uid)
     return NO_ERROR, dict(userball=_u, foodball=_f, spineball=_s)
@@ -40,18 +41,20 @@ def syncUserball(p, req):
         uid = p.uid
     else: # used to test
         log.error('client has not found uid.')
-    # ball_info = [ball_id, ball_x, ball_y, ball_z, ball_r]
-    ball_info, uid = req
+        uid = 1
+    # ball_info = [[ball_id, ball_x, ball_y, ball_z, ball_r], ......]
+    ball_info = req
 
-    #user = g_UserMgr.getUserBYUid(uid)
-    #if not user:
-    #    return CONNECTION_LOSE, None
+    user = g_UserMgr.getUserByUid(uid)
+    if not user:
+        return CONNECTION_LOSE, None
 
     room_obj = g_PVPServer.getRoomByUid(uid)
     if not room_obj:
         return PVPROOM_LOSE, None
 
-    room_obj.syncUserBall(uid, ball_info)
+    err, data = room_obj.syncUserball(uid, ball_info)
+    return err, data
 
 
 @route()
@@ -61,9 +64,10 @@ def syncSpineball(p, req):
         uid = p.uid
     else: # used to test
         log.error('client has not found uid.')
-    ball_args, uid = req
+        uid = 1
+    ball_args = req
 
-    #user = g_UserMgr.getUserBYUid(uid)
+    #user = g_UserMgr.getUserByUid(uid)
     #if not user:
     #    return CONNECTION_LOSE, None
 

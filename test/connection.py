@@ -49,6 +49,14 @@ def join_pvp(p, args):
         print '\t', _key, len(data[_key])
     defer.returnValue(0)
 
+@defer.inlineCallbacks
+def syncUserball(p, args):
+    error, data = yield p.call('syncUserball', args)
+    print "login p: ", p, "args: ", args
+    print "error: ", error
+    print "login return data: ", data
+    defer.returnValue(0)
+
 def errback(error):
     print "error: ", error
 
@@ -64,10 +72,19 @@ def connectServer():
     d = conn.connect(HOST, PORT)
     print 'init d: ', d
 
-    #args = ['kkkkkkk']
-    #d.addCallbacks(service_login, errback, (args,))
-    args = [2]
-    d.addCallbacks(join_pvp, errback, (args,))
+    handler_id = int(sys.argv[1])
+    if handler_id == 1:
+        args = ['kkkkkkk']
+        d.addCallbacks(service_login, errback, (args,))
+    elif handler_id == 2:
+        args = [1]
+        d.addCallbacks(join_pvp, errback, (args,))
+    elif handler_id == 3:
+        args = [[1, 9900, -17, -393, 20], 1]
+        d.addCallbacks(syncUserball, errback, (args,))
+    else:
+        print "fail args ........"
+
     d.addCallback(finish)
 
 
