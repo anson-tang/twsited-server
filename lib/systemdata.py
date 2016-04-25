@@ -145,7 +145,6 @@ def constant_data():
             'SPINEBALL_RADIUS': SPINEBALL_RADIUS,
             'USERBALL_RADIUS': USERBALL_RADIUS,
             'COMMON_RADIUS': COMMON_RADIUS,
-            'RADIUS_ENLARGE': RADIUS_ENLARGE,
             'COORDINATE_ENLARGE': COORDINATE_ENLARGE,
         }
     return constant_data

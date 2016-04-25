@@ -49,7 +49,7 @@ def insert_mysql(table, values):
 
     cursor.close()
     conn.close()
-
+    print("insert mysql table(tb_%s) sucess."%(table))
 
 
 def init_ball_data(table, count):
@@ -59,9 +59,9 @@ def init_ball_data(table, count):
 
     try:
         values = list()
-        radius = COMMON_RADIUS * COORDINATE_ENLARGE / RADIUS_ENLARGE
+        radius = COMMON_RADIUS
         for i in xrange(1, count+1):
-            y = random.randint(-radius, radius)
+            y = 0#random.randint(-radius, radius)
             max_z = int(math.sqrt(pow(radius,2) - pow(y,2)))
             z = random.randint(-max_z, max_z)
             x = random.choice((-1, 1)) * int(math.sqrt(pow(radius,2) - pow(y,2) - pow(z,2)))
@@ -76,7 +76,9 @@ def init_ball_data(table, count):
 
 if __name__ == "__main__":
     # init foodball data
-    init_ball_data('foodball', 1000)
+    init_ball_data('foodball', 10)
 
     # init foodball data
-    init_ball_data('spineball', 20)
+    init_ball_data('spineball', 5)
+
+    print("Over ......")

@@ -80,7 +80,7 @@ def connectServer():
         args = [1]
         d.addCallbacks(join_pvp, errback, (args,))
     elif handler_id == 3:
-        args = [[1, 9900, -17, -393, 20], 1]
+        args = [(1, 9849, 0, -1731, 100)]
         d.addCallbacks(syncUserball, errback, (args,))
     else:
         print "fail args ........"

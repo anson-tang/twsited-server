@@ -33,14 +33,21 @@ FOR_ALL         = 0
 FOR_SERVER_ONLY = 1
 FOR_CLIENT_ONLY = 2
 
-# 不同类型球的半径大小 放大10倍
-FOODBALL_RADIUS = 5
-SPINEBALL_RADIUS =  50
-USERBALL_RADIUS = 10
+# 不同类型球的半径大小基准值为100倍 取两位有效数字 与客户端相同
+FOODBALL_RADIUS = 50
+SPINEBALL_RADIUS = 500
+USERBALL_RADIUS = 100
 
-COMMON_RADIUS = 10
-RADIUS_ENLARGE = 10 # 半径放大的倍数
-COORDINATE_ENLARGE = 10000 # 坐标放大的倍数
-COMMON_HIGHT = 10 # 默认高度，高度小于COMMON_RADIUS 表示为去掉顶部和底部某些区域的点.
+COMMON_RADIUS = 10000 # 公共球半径
+COORDINATE_ENLARGE = 100 # 公共球半径/坐标 放大的倍数
+#COMMON_HIGHT = 10 # 默认高度，高度小于COMMON_RADIUS 表示为去掉顶部和底部某些区域的点.
 
-MAX_ROOM_COUNT = 20 # 房间最大玩家人数
+MAX_ROOM_COUNT = 40 # 房间最大玩家人数
+
+
+MULTIPLE_HIDE_USERBALL = 1.1 # 玩家球之间互吃的倍数 正常值
+MULTIPLE_ENLARGE_FOODBALL = 2 # 吃食物球的半径增长倍数 百分比
+MULTIPLE_ENLARGE_USERBALL = 50 # 吃玩家球的半径增长倍数  百分比
+INTERVAL_FOODBALL = 20 # 食物球重新随机位置的间隔时间 秒
+PVP_SECONDS = 60 # PVP持续时间 秒
+
