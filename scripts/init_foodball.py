@@ -61,7 +61,7 @@ def init_ball_data(table, count):
         values = list()
         radius = COMMON_RADIUS
         for i in xrange(1, count+1):
-            y = 0#random.randint(-radius, radius)
+            y = random.randint(-radius, radius)
             max_z = int(math.sqrt(pow(radius,2) - pow(y,2)))
             z = random.randint(-max_z, max_z)
             x = random.choice((-1, 1)) * int(math.sqrt(pow(radius,2) - pow(y,2) - pow(z,2)))
@@ -76,9 +76,9 @@ def init_ball_data(table, count):
 
 if __name__ == "__main__":
     # init foodball data
-    init_ball_data('foodball', 10)
+    init_ball_data('foodball', 200)
 
     # init foodball data
-    init_ball_data('spineball', 5)
+    init_ball_data('spineball', 20)
 
     print("Over ......")
