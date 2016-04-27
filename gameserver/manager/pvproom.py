@@ -88,7 +88,7 @@ class Userball(object):
             loop = loop + 1
 
         hide_ids = [(self.__uid, _bid) for _bid in hide_ids]
-        log.debug('=====test final ===== hide_ids:{0}, delta_radius:{1}, new_ball_info:{2}'.format(hide_ids, new_ball_r, new_ball_info))
+        log.debug('=====test final ===== hide_ids:{0}, delta_radius:{1}, new_ball_info:{2}'.format(hide_ids, delta_radius, new_ball_info))
         return hide_ids, delta_radius, new_ball_info
 
 
@@ -145,22 +145,22 @@ class PVPRoom(object):
         _hide_fb_ids = list()
 
         userball_obj = self.__users[uid]
-        _hide_ub_ids, delta_radius, ball_info = userball_obj.checkHideBall(ball_info)
+        _hide_ub_ids, _delta_radius, ball_info = userball_obj.checkHideBall(ball_info)
 
         for _bid, _bx, _by, _bz in self.__foodball.itervalues():
-            _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
             for ball_id, ball_x, ball_y, ball_z, ball_r, pow_r in ball_info:
                 #TODO 和食物球 其它玩家球比较半径大小 计算直线距离
                 #TODO 玩家球 分裂后的半径也会比食物球大吗？
+                _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
                 log.warn('uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz)))
                 if _distance < pow_r:
                     #TODO 自身体积增长
                     _delta_br = ball_r * MULTIPLE_ENLARGE_FOODBALL / 100
-                    _new_ub_info[_bid] = _new_ub_info.setdefault(_bid, ball_r) + _delta_br
+                    _delta_radius[ball_id] = _delta_radius.setdefault(ball_id, ball_r) + _delta_br
                     self.__hide_foodball_ids.append(_bid)
                     _hide_fb_ids.append(_bid)
-            for _bid in _hide_fb_ids:
-                del self.__foodball[_bid]
+        for _bid in _hide_fb_ids:
+            del self.__foodball[_bid]
         # uid and ballid
         for _ub in self.__users.itervalues():
             if _ub.uid == uid:
@@ -173,13 +173,13 @@ class PVPRoom(object):
                     _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
                     if _distance < pow_r:
                         #TODO 自身体积增长
-                        delta_radius[ball_id] = delta_radius.setdefault(ball_id, ball_r) + (MULTIPLE_ENLARGE_USERBAL * _br / 100)
+                        _delta_radius[ball_id] = _delta_radius.setdefault(ball_id, ball_r) + (MULTIPLE_ENLARGE_USERBAL * _br / 100)
                         _ub.setHideBall(_bid)
                         _hide_ub_ids.append((uid, _bid))
 
         #TODO 食物球被吃后的出现规则
         data = list()
-        _delta_ub_radius = [(_k, _v) for _k, _v in delta_radius.iteritems()]
+        _delta_ub_radius = [(uid, _bid, _br) for _bid, _br in _delta_radius.iteritems()]
         if (_hide_ub_ids or _hide_fb_ids or _delta_ub_radius):
             data = (_hide_ub_ids, _hide_fb_ids, _delta_ub_radius)
             #TODO broadcast

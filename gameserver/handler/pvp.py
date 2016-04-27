@@ -67,8 +67,8 @@ def syncSpineball(p, req):
         uid = 1
     ball_args = req
 
-    #user = g_UserMgr.getUserByUid(uid)
-    #if not user:
-    #    return CONNECTION_LOSE, None
+    user = g_UserMgr.getUserByUid(uid)
+    if not user:
+        return PVPROOM_LOSE, None
 
 

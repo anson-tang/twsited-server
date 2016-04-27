@@ -1,4 +1,5 @@
 etc/setting_env.py
+logs
 *.pyc
 *.log
 *.pid
