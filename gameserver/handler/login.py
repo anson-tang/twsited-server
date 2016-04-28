@@ -20,8 +20,7 @@ from manager.gameuser import g_UserMgr
 @route()
 @defer.inlineCallbacks
 def login(p, req):
-    log.debug("client: ", p)
-    log.debug("req: ", req)
+    log.warn("=======req: ", req)
     machine_code, = req
     if not machine_code:
         defer.returnValue((MACHINE_CODE_ERROR, {}))

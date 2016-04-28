@@ -25,6 +25,7 @@ def joinPVP(p, req):
     else: # used to test
         log.error('client has not found uid.')
         uid, = req
+        return CONNECTION_LOSE, None
 
     user = g_UserMgr.getUserByUid(uid)
     if not user:
@@ -36,14 +37,16 @@ def joinPVP(p, req):
 
 @route()
 def syncUserball(p, req):
+    '''
+    @req: [[ball_id, ball_x, ball_y, ball_z, ball_r], ......]
+    '''
     if hasattr(p, "uid"):
         log.debug('uid:{0}'.format(p.uid))
         uid = p.uid
     else: # used to test
         log.error('client has not found uid.')
         uid = 1
-    # ball_info = [[ball_id, ball_x, ball_y, ball_z, ball_r], ......]
-    ball_info = req
+        return CONNECTION_LOSE, None
 
     user = g_UserMgr.getUserByUid(uid)
     if not user:
@@ -53,7 +56,7 @@ def syncUserball(p, req):
     if not room_obj:
         return PVPROOM_LOSE, None
 
-    err, data = room_obj.syncUserball(uid, ball_info)
+    err, data = room_obj.syncUserball(uid, req)
     return err, data
 
 
@@ -65,10 +68,13 @@ def syncSpineball(p, req):
     else: # used to test
         log.error('client has not found uid.')
         uid = 1
-    ball_args = req
+        return CONNECTION_LOSE, None
 
     user = g_UserMgr.getUserByUid(uid)
     if not user:
         return PVPROOM_LOSE, None
+
+    err, data = room_obj.syncSpineball(uid, req)
+    return err, data
 
 

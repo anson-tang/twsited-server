@@ -7,6 +7,8 @@
 # Summary: 
 import random
 import math
+
+from twisted.internet import reactor
 from log import log
 from system import *
 from constant import *
@@ -62,7 +64,8 @@ class Userball(object):
         log.debug('=====test start ===== ball_info:{0}'.format(ball_info))
         ball_info = sorted(ball_info, key=lambda ball_info: ball_info[4], reverse=True)
         for _b in ball_info:
-            _b.append(pow(_b[4]*COORDINATE_ENLARGE, 2))
+            _b.append(pow(_b[4], 2))
+            #_b.append(pow(_b[4]*COORDINATE_ENLARGE, 2))
         total = len(ball_info)
         loop = 1
         hide_ids = list()
@@ -82,7 +85,7 @@ class Userball(object):
                 _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
                 if _distance < pow_r:
                     hide_ids.append(_bid)
-                    delta_radius[ball_id] = new_ball_r.setdefault(ball_id, ball_r) + (MULTIPLE_ENLARGE_USERBAL * _br / 100)
+                    delta_radius[ball_id] = delta_radius.setdefault(ball_id, ball_r) + (MULTIPLE_ENLARGE_USERBAL * _br / 100)
                 else:
                     new_ball_info.append((_bid, _bx, _by, _bz, _br, _pr))
             loop = loop + 1
@@ -99,8 +102,11 @@ class PVPRoom(object):
         self.__foodball = dict()
         self.__spineball = dict()
         # hide ball
-        self.__hide_foodball_ids = list()
+        self.__hide_foodball_ids = dict()
         self.__hide_spineball_ids = list()
+
+        reactor.callLater(INTERVAL_FOODBALL, self._broadcastFoodball)
+
 
     @property
     def count(self):
@@ -143,23 +149,25 @@ class PVPRoom(object):
             return PVPROOM_LOSE, None
 
         _hide_fb_ids = list()
-
         userball_obj = self.__users[uid]
         _hide_ub_ids, _delta_radius, ball_info = userball_obj.checkHideBall(ball_info)
 
+        _delta_br =  int(FOODBALL_RADIUS * MULTIPLE_ENLARGE_FOODBALL * 0.01)
+        _max_hide = 1
         for _bid, _bx, _by, _bz in self.__foodball.itervalues():
             for ball_id, ball_x, ball_y, ball_z, ball_r, pow_r in ball_info:
                 #TODO 和食物球 其它玩家球比较半径大小 计算直线距离
                 #TODO 玩家球 分裂后的半径也会比食物球大吗？
                 _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
-                log.warn('uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz)))
                 if _distance < pow_r:
+                    log.warn('=======uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz)))
                     #TODO 自身体积增长
-                    _delta_br = ball_r * MULTIPLE_ENLARGE_FOODBALL / 100
                     _delta_radius[ball_id] = _delta_radius.setdefault(ball_id, ball_r) + _delta_br
-                    self.__hide_foodball_ids.append(_bid)
                     _hide_fb_ids.append(_bid)
+                    if len(_hide_fb_ids) > 2:
+                        break
         for _bid in _hide_fb_ids:
+            self.__hide_foodball_ids[_bid] = 0
             del self.__foodball[_bid]
         # uid and ballid
         for _ub in self.__users.itervalues():
@@ -179,15 +187,56 @@ class PVPRoom(object):
 
         #TODO 食物球被吃后的出现规则
         data = list()
-        _delta_ub_radius = [(uid, _bid, _br) for _bid, _br in _delta_radius.iteritems()]
+        _delta_ub_radius = list()
+        for ball_id, ball_x, ball_y, ball_z, ball_r, pow_r in ball_info:
+            ball_r = _delta_radius[ball_id] if ball_id in _delta_radius else ball_r
+            _delta_ub_radius.append((uid, ball_id, ball_x, ball_y, ball_z, ball_r))
+            #_delta_ub_radius = [(uid, _bid, _br) for _bid, _br in _delta_radius.iteritems()]
         if (_hide_ub_ids or _hide_fb_ids or _delta_ub_radius):
             data = (_hide_ub_ids, _hide_fb_ids, _delta_ub_radius)
             #TODO broadcast
             uids = self.__users.keys()
-            log.debug('================broadcast uid:{0}, users: {1}).'.format(uid, uids))
             uids.remove(uid)
             if uids:
+                log.warn('================broadcast uid:{0}, uids:{1}, data:{2}).'.format(uid, uids, data))
                 send2client(uids, 'broadcastUserball', data)
 
-        log.warn('uid:{0}, data:{1}'.format(uid, data))
+        #log.warn('=================uid:{0}, data:{1}'.format(uid, data))
         return NO_ERROR, data
+
+    def syncSpineball(self, uid, ball_info):
+        if not (ball_info and isinstance(ball_info[0], list)):
+            log.error("args error. ball_info:{0}.".format(ball_info))
+            return ARGS_ERROR, None
+
+        uids = self.__users.keys()
+        log.debug('================broadcast uid:{0}, users: {1}).'.format(uid, uids))
+        uids.remove(uid)
+        if uids:
+            send2client(uids, 'broadcastSpineball', ball_info)
+
+        return NO_ERROR, None
+
+    def _broadcastFoodball(self):
+        _uids = self.__users.keys()
+        _foodball_ids = self.__hide_foodball_ids.keys()
+        _new_foodball_info = self._random_xyz(_foodball_ids)
+        log.debug('===============broadcast show Foodball. _uids:{0}, _new_foodball_info:{1}.'.format(_uids, _new_foodball_info))
+        if _uids and _foodball_ids:
+            send2client(_uids, 'broadcastNewFoodball', _new_foodball_info)
+        self.__hide_foodball_ids = dict()
+
+        if True:
+            reactor.callLater(INTERVAL_FOODBALL, self._broadcastFoodball)
+
+    def _random_xyz(self, ball_ids):
+        values = list()
+        radius = COMMON_RADIUS
+        for _id in ball_ids:
+            y = random.randint(-radius, radius)
+            max_z = int(math.sqrt(pow(radius,2) - pow(y,2)))
+            z = random.randint(-max_z, max_z)
+            x = random.choice((-1, 1)) * int(math.sqrt(pow(radius,2) - pow(y,2) - pow(z,2)))
+            values.append((_id, x, y, z))
+
+        return values

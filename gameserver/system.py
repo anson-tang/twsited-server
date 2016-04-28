@@ -21,3 +21,4 @@ def get_all_foodball():
 
 def get_all_spineball():
     return sysconfig.get('spineball', dict())
+
