@@ -85,7 +85,7 @@ class Userball(object):
                 _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
                 if _distance < pow_r:
                     hide_ids.append(_bid)
-                    delta_radius[ball_id] = delta_radius.setdefault(ball_id, ball_r) + (MULTIPLE_ENLARGE_USERBAL * _br / 100)
+                    delta_radius[ball_id] = delta_radius.setdefault(ball_id, ball_r) + (MULTIPLE_ENLARGE_USERBALL * _br / 100)
                 else:
                     new_ball_info.append((_bid, _bx, _by, _bz, _br, _pr))
             loop = loop + 1
@@ -104,6 +104,8 @@ class PVPRoom(object):
         # hide ball
         self.__hide_foodball_ids = dict()
         self.__hide_spineball_ids = list()
+        # PVP结束时间点
+        self.__end_time = 0
 
         reactor.callLater(INTERVAL_FOODBALL, self._broadcastFoodball)
 
@@ -123,6 +125,7 @@ class PVPRoom(object):
             self.__spineball = get_all_spineball()
             foodball_conf = self.__foodball.values()
             spineball_conf = self.__spineball.values()
+            self.__end_time = int((time() + 15)*1000)
         else:
             foodball_conf = self.__foodball.values()
             spineball_conf = self.__spineball.values()
@@ -134,8 +137,10 @@ class PVPRoom(object):
             if _ub.uid == uid:
                 continue
             all_userball.extend(_ub.getAllBall())
+        #TODO get weight ranklist
+        rank = len(self.__users)
 
-        return (all_userball, foodball_conf, spineball_conf)
+        return (all_userball, foodball_conf, spineball_conf, self.__end_time, rank)
 
     def isMember(self, uid):
         return uid in self.__users
@@ -160,9 +165,9 @@ class PVPRoom(object):
                 #TODO 玩家球 分裂后的半径也会比食物球大吗？
                 _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
                 if _distance < pow_r:
-                    log.warn('=======uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz)))
                     #TODO 自身体积增长
                     _delta_radius[ball_id] = _delta_radius.setdefault(ball_id, ball_r) + _delta_br
+                    log.warn('=======uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}, _delta_br:{5} _delta_radius:{6}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz), _delta_br, _delta_radius))
                     _hide_fb_ids.append(_bid)
                     if len(_hide_fb_ids) > 2:
                         break
@@ -180,6 +185,8 @@ class PVPRoom(object):
                         continue
                     _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
                     if _distance < pow_r:
+                        #TODO 记录吃了玩家球的个数
+
                         #TODO 自身体积增长
                         _delta_radius[ball_id] = _delta_radius.setdefault(ball_id, ball_r) + (MULTIPLE_ENLARGE_USERBAL * _br / 100)
                         _ub.setHideBall(_bid)
@@ -201,7 +208,7 @@ class PVPRoom(object):
                 log.warn('================broadcast uid:{0}, uids:{1}, data:{2}).'.format(uid, uids, data))
                 send2client(uids, 'broadcastUserball', data)
 
-        #log.warn('=================uid:{0}, data:{1}'.format(uid, data))
+        log.warn('================return uid:{0}, data:{1}).'.format(uid, data))
         return NO_ERROR, data
 
     def syncSpineball(self, uid, ball_info):

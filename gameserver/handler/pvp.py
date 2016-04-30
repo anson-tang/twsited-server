@@ -31,8 +31,8 @@ def joinPVP(p, req):
     if not user:
         return CONNECTION_LOSE, None
 
-    _u, _f, _s = g_PVPServer.joinRoom(uid)
-    return NO_ERROR, dict(userball=_u, foodball=_f, spineball=_s)
+    _u, _f, _s, _t, _r = g_PVPServer.joinRoom(uid)
+    return NO_ERROR, dict(userball=_u, foodball=_f, spineball=_s, end_time=_t, rank=_r)
 
 
 @route()
@@ -48,6 +48,7 @@ def syncUserball(p, req):
         uid = 1
         return CONNECTION_LOSE, None
 
+    log.warn('==============req:{0}.'.format(req))
     user = g_UserMgr.getUserByUid(uid)
     if not user:
         return CONNECTION_LOSE, None

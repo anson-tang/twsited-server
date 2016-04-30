@@ -7,6 +7,7 @@
 # Summary: 
 
 from twisted.internet import defer
+from time import time
 
 from rpc import route
 from log import log
@@ -49,5 +50,6 @@ def login(p, req):
         if user:
             info = user.character_mgr.info()
 
-    info.update({'constants':constant_data()})
+    info['constants'] = constant_data()
+    info['server_time'] = int(time()*1000)
     defer.returnValue((0, info))
