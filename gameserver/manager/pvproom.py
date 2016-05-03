@@ -8,6 +8,7 @@
 import random
 import math
 
+from time import time
 from twisted.internet import reactor
 from log import log
 from system import *

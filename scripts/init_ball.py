@@ -76,9 +76,9 @@ def init_ball_data(table, count):
 
 if __name__ == "__main__":
     # init foodball data
-    init_ball_data('foodball', 200)
+    init_ball_data('foodball', 300)
 
     # init foodball data
-    init_ball_data('spineball', 20)
+    init_ball_data('spineball', 10)
 
     print("Over ......")

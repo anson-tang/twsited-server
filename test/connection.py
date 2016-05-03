@@ -45,8 +45,9 @@ def join_pvp(p, args):
     print "login p: ", p, "args: ", args
     print "error: ", error
     print "login return data: "
-    for _key in data.keys():
-        print '\t', _key, len(data[_key])
+    if not error:
+        for _key in data.keys():
+            print '\t', _key, len(data[_key]) if isinstance(data[_key], (tuple, list)) else data[_key]
     defer.returnValue(0)
 
 @defer.inlineCallbacks

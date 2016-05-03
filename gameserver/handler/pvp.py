@@ -45,7 +45,6 @@ def syncUserball(p, req):
         uid = p.uid
     else: # used to test
         log.error('client has not found uid.')
-        uid = 1
         return CONNECTION_LOSE, None
 
     log.warn('==============req:{0}.'.format(req))
@@ -68,7 +67,6 @@ def syncSpineball(p, req):
         uid = p.uid
     else: # used to test
         log.error('client has not found uid.')
-        uid = 1
         return CONNECTION_LOSE, None
 
     user = g_UserMgr.getUserByUid(uid)

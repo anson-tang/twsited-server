@@ -42,14 +42,16 @@ USERBALL_RADIUS = 100
 
 COMMON_RADIUS = 10000 # 公共球半径
 COORDINATE_ENLARGE = 100 # 公共球半径/坐标 放大的倍数
-#COMMON_HIGHT = 10 # 默认高度，高度小于COMMON_RADIUS 表示为去掉顶部和底部某些区域的点.
 
-MAX_ROOM_COUNT = 40 # 房间最大玩家人数
+MAX_COMMON_RADIUS = 5000 # 公共球最大半径
+MAX_USER_COUNT = 20 # 房间最大玩家人数
+MAX_USERBALL_COUNT = 8 # 玩家球最大数量
 
 
 MULTIPLE_HIDE_USERBALL = 1.1 # 玩家球之间互吃的倍数 正常值
 MULTIPLE_ENLARGE_FOODBALL = 2 # 吃食物球的半径增长倍数 百分比
 MULTIPLE_ENLARGE_USERBALL = 50 # 吃玩家球的半径增长倍数  百分比
-INTERVAL_FOODBALL = 20 # 食物球重新随机位置的间隔时间 秒
-PVP_SECONDS = 60 # PVP持续时间 秒
+REFRESH_INTERVAL_FOODBALL = 15 # 食物球重新随机位置的间隔时间 秒
+REFRESH_INTERVAL_SPINEBALL = 30 # 刺球刷新间隔时间 秒
+PVP_SECONDS = 300 # PVP持续时间 秒
 
