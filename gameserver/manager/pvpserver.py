@@ -30,7 +30,7 @@ class PVPServer(object):
             self.__rooms[_room_id] = self.__curr_room
  
         ball_data = self.__curr_room.newUser(uid)
-        if self.__curr_room.count >= MAX_ROOM_COUNT:
+        if self.__curr_room.count >= MAX_USER_COUNT:
             self.__curr_room = None
 
         return ball_data

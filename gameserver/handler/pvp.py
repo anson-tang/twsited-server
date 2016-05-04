@@ -32,7 +32,9 @@ def joinPVP(p, req):
         return CONNECTION_LOSE, None
 
     _u, _f, _s, _t, _r = g_PVPServer.joinRoom(uid)
-    return NO_ERROR, dict(userball=_u, foodball=_f, spineball=_s, end_time=_t, rank=_r)
+    data = {'userball':_u, 'foodball':_f, 'spineball':_s, 'end_time':_t, 'rank':_r}
+    log.warn('==============joinPVP userball:{0}'.format(_u))
+    return NO_ERROR, data
 
 
 @route()

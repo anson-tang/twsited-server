@@ -108,7 +108,7 @@ class PVPRoom(object):
         # PVP结束时间点
         self.__end_time = 0
 
-        reactor.callLater(INTERVAL_FOODBALL, self._broadcastFoodball)
+        reactor.callLater(REFRESH_INTERVAL_FOODBALL, self._broadcastFoodball)
 
 
     @property
@@ -168,30 +168,32 @@ class PVPRoom(object):
                 if _distance < pow_r:
                     #TODO 自身体积增长
                     _delta_radius[ball_id] = _delta_radius.setdefault(ball_id, ball_r) + _delta_br
-                    log.warn('=======uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}, _delta_br:{5} _delta_radius:{6}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz), _delta_br, _delta_radius))
+                    log.warn('=======foodball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}, _delta_br:{5} _delta_radius:{6}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz), _delta_br, _delta_radius))
                     _hide_fb_ids.append(_bid)
                     if len(_hide_fb_ids) > 2:
                         break
         for _bid in _hide_fb_ids:
             self.__hide_foodball_ids[_bid] = 0
-            del self.__foodball[_bid]
+            if _bid in self.__foodball:
+                del self.__foodball[_bid]
         # uid and ballid
         for _ub in self.__users.itervalues():
             if _ub.uid == uid:
                 continue
+            #TODO 记录吞噬/被吞噬 玩家球的个数
             _all_ball = _ub.getAllBall()
             for _uid, _bid, _bx, _by, _bz, _br in iter(_all_ball):
                 for ball_id, ball_x, ball_y, ball_z, ball_r, pow_r in ball_info:
                     if MULTIPLE_HIDE_USERBALL*_br > ball_r:
                         continue
                     _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
+                    log.warn('=======userball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}.'.format(uid, pow_r, _distance, (_uid, _bid, _bx, _by, _bz, _br), (ball_id, ball_x, ball_y, ball_z, ball_r)))
                     if _distance < pow_r:
-                        #TODO 记录吃了玩家球的个数
 
                         #TODO 自身体积增长
                         _delta_radius[ball_id] = _delta_radius.setdefault(ball_id, ball_r) + (MULTIPLE_ENLARGE_USERBAL * _br / 100)
                         _ub.setHideBall(_bid)
-                        _hide_ub_ids.append((uid, _bid))
+                        _hide_ub_ids.append((_uid, _bid))
 
         #TODO 食物球被吃后的出现规则
         data = list()
@@ -206,7 +208,7 @@ class PVPRoom(object):
             uids = self.__users.keys()
             uids.remove(uid)
             if uids:
-                log.warn('================broadcast uid:{0}, uids:{1}, data:{2}).'.format(uid, uids, data))
+                log.warn('================broadcastUserball uid:{0}, uids:{1}, data:{2}).'.format(uid, uids, data))
                 send2client(uids, 'broadcastUserball', data)
 
         log.warn('================return uid:{0}, data:{1}).'.format(uid, data))
@@ -218,7 +220,7 @@ class PVPRoom(object):
             return ARGS_ERROR, None
 
         uids = self.__users.keys()
-        log.debug('================broadcast uid:{0}, users: {1}).'.format(uid, uids))
+        log.debug('================broadcastSpineball uid:{0}, users: {1}).'.format(uid, uids))
         uids.remove(uid)
         if uids:
             send2client(uids, 'broadcastSpineball', ball_info)
@@ -229,13 +231,13 @@ class PVPRoom(object):
         _uids = self.__users.keys()
         _foodball_ids = self.__hide_foodball_ids.keys()
         _new_foodball_info = self._random_xyz(_foodball_ids)
-        log.debug('===============broadcast show Foodball. _uids:{0}, _new_foodball_info:{1}.'.format(_uids, _new_foodball_info))
+        log.debug('===============broadcastFoodball. _uids:{0}, _new_foodball_info:{1}.'.format(_uids, _new_foodball_info))
         if _uids and _foodball_ids:
             send2client(_uids, 'broadcastNewFoodball', _new_foodball_info)
         self.__hide_foodball_ids = dict()
 
         if True:
-            reactor.callLater(INTERVAL_FOODBALL, self._broadcastFoodball)
+            reactor.callLater(REFRESH_INTERVAL_FOODBALL, self._broadcastFoodball)
 
     def _random_xyz(self, ball_ids):
         values = list()

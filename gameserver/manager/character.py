@@ -63,7 +63,8 @@ class Character(object):
     @defer.inlineCallbacks
     def new(self, machine_code, nickname):
         self.attrib = Attribute(self._table)
-        yield self.attrib.new(machine_code=machine_code, nickname=nickname, exp=10, coin=10)
+        yield self.attrib.new(machine_code=machine_code, nickname=nickname, max_weight=0, \
+                play_num=0, eat_num=0, be_eated_num=0)
         self.uid = self.attrib.attrib_id
         self.nickname = nickname
         self.machine_code = machine_code

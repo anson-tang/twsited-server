@@ -23,6 +23,11 @@ class GameUser(object):
         # user logout's end timestamp, set a flag one-to-one of reactor logoutUserReal. 
         self.logout_timestamp = 0
 
+    @property
+    def attrib(self):
+        return self.character_mgr.attrib
+
+
 class GameUserMgr(object):
     def __init__(self):
         self.all_users = {} #Key is uid
