@@ -78,7 +78,7 @@ def connectServer():
         args = ['kkkkkkk']
         d.addCallbacks(service_login, errback, (args,))
     elif handler_id == 2:
-        args = [1]
+        args = [3]
         d.addCallbacks(join_pvp, errback, (args,))
     elif handler_id == 3:
         args = [(1, 9849, 0, -1731, 100)]

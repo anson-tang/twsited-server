@@ -24,7 +24,7 @@ TABLE_PREFIX = 'tb_'
 def sync_dirty_attributes(queue, loop=True):
     qsize = queue.qsize()
     if qsize > 0:
-        LOG.info("sync data to db. dirty attrib length:%s." % qsize)
+        log.info("sync data to db. dirty attrib length:%s." % qsize)
         if loop:
             sync_cnt = min(qsize, MAX_SYNC_CNT_PER_LOOP)
         else:
@@ -234,7 +234,7 @@ class Attribute(object): #Present one row in db
             _dirty_fields = self.__dirty_fields[:]
 
             if len(_dirty_fields) == 0 and False == self.__del:
-                LOG.info('no dirty_fields! table name:{0}, attrib_id:{1}.'.format( self.table, self.__attrib_id ))
+                log.info('no dirty_fields! table name:{0}, attrib_id:{1}.'.format( self.table, self.__attrib_id ))
                 raise defer.returnValue(None)
 
             _sql = ''
@@ -247,10 +247,10 @@ class Attribute(object): #Present one row in db
                     if _v:
                         yield POOL.execute(_sql, _v)
                     else:
-                        LOG.warn('Update error. table: {0}, cid: {1}, sql: {2}, dirty: {3}.'.format(\
+                        log.warn('Update error. table: {0}, cid: {1}, sql: {2}, dirty: {3}.'.format(\
                             self.table, self.__attrib_id, _sql, self.__dirty_fields))
             except:
-                LOG.exception('[ SQLERROR ]table:{0}, id:{1}, dirty:{2}, new:{3}, dirty_fields:{4}, sql:{5}'.format(
+                log.exception('[ SQLERROR ]table:{0}, id:{1}, dirty:{2}, new:{3}, dirty_fields:{4}, sql:{5}'.format(
                     self.table, self.__attrib_id, self.__dirty, self.__new, self.__dirty_fields, _sql))
             else:
                 self.clean()

@@ -24,7 +24,7 @@ def joinPVP(p, req):
         uid = p.uid
     else: # used to test
         log.error('client has not found uid.')
-        uid, = req
+        uid = 3
         return CONNECTION_LOSE, None
 
     user = g_UserMgr.getUserByUid(uid)
@@ -47,6 +47,7 @@ def syncUserball(p, req):
         uid = p.uid
     else: # used to test
         log.error('client has not found uid.')
+        uid = 3
         return CONNECTION_LOSE, None
 
     log.warn('==============req:{0}.'.format(req))
@@ -58,7 +59,7 @@ def syncUserball(p, req):
     if not room_obj:
         return PVPROOM_LOSE, None
 
-    err, data = room_obj.syncUserball(uid, req)
+    err, data = room_obj.syncUserball(user.attrib, req)
     return err, data
 
 

@@ -15,6 +15,7 @@ from system import *
 from constant import *
 from errorno import *
 from handler.broadcast import send2client
+from manager.gameuser import g_UserMgr
 
 
 
@@ -107,6 +108,9 @@ class PVPRoom(object):
         self.__hide_spineball_ids = list()
         # PVP结束时间点
         self.__end_time = 0
+        # 统计吞噬和被吞噬次数
+        self.__eat_num = dict()  # uid-num
+        self.__be_eated_num = dict() # uid-num
 
         reactor.callLater(REFRESH_INTERVAL_FOODBALL, self._broadcastFoodball)
 
@@ -126,7 +130,9 @@ class PVPRoom(object):
             self.__spineball = get_all_spineball()
             foodball_conf = self.__foodball.values()
             spineball_conf = self.__spineball.values()
-            self.__end_time = int((time() + 15)*1000)
+            self.__end_time = int((time() + PVP_SECONDS)*1000)
+            self.__eat_num.setdefault(uid, 0)
+            self.__be_eated_num.setdefault(uid, 0)
         else:
             foodball_conf = self.__foodball.values()
             spineball_conf = self.__spineball.values()
@@ -138,7 +144,7 @@ class PVPRoom(object):
             if _ub.uid == uid:
                 continue
             all_userball.extend(_ub.getAllBall())
-        #TODO get weight ranklist
+        #TODO get weight ranklist from redis
         rank = len(self.__users)
 
         return (all_userball, foodball_conf, spineball_conf, self.__end_time, rank)
@@ -146,11 +152,12 @@ class PVPRoom(object):
     def isMember(self, uid):
         return uid in self.__users
 
-    def syncUserball(self, uid, ball_info):
+    def syncUserball(self, character, ball_info):
         if not (ball_info and isinstance(ball_info[0], list)):
             log.error("args error. uid:{0}, ball_info:{1}.".format(uid, ball_info))
             return ARGS_ERROR, None
 
+        uid = character.attrib_id
         if uid not in self.__users:
             return PVPROOM_LOSE, None
 
@@ -162,13 +169,13 @@ class PVPRoom(object):
         _max_hide = 1
         for _bid, _bx, _by, _bz in self.__foodball.itervalues():
             for ball_id, ball_x, ball_y, ball_z, ball_r, pow_r in ball_info:
-                #TODO 和食物球 其它玩家球比较半径大小 计算直线距离
-                #TODO 玩家球 分裂后的半径也会比食物球大吗？
+                # 和食物球 其它玩家球比较半径大小 计算直线距离
+                # 玩家球 分裂后的半径也会比食物球大吗？
                 _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
                 if _distance < pow_r:
-                    #TODO 自身体积增长
+                    # 自身体积增长
                     _delta_radius[ball_id] = _delta_radius.setdefault(ball_id, ball_r) + _delta_br
-                    log.warn('=======foodball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}, _delta_br:{5} _delta_radius:{6}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz), _delta_br, _delta_radius))
+                    log.warn('==foodball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}, _delta_br:{5} _delta_radius:{6}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz), _delta_br, _delta_radius))
                     _hide_fb_ids.append(_bid)
                     if len(_hide_fb_ids) > 2:
                         break
@@ -180,22 +187,26 @@ class PVPRoom(object):
         for _ub in self.__users.itervalues():
             if _ub.uid == uid:
                 continue
-            #TODO 记录吞噬/被吞噬 玩家球的个数
             _all_ball = _ub.getAllBall()
             for _uid, _bid, _bx, _by, _bz, _br in iter(_all_ball):
+                _be_eated_user = g_UserMgr.getUserByUid(_uid)
                 for ball_id, ball_x, ball_y, ball_z, ball_r, pow_r in ball_info:
                     if MULTIPLE_HIDE_USERBALL*_br > ball_r:
                         continue
                     _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
-                    log.warn('=======userball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}.'.format(uid, pow_r, _distance, (_uid, _bid, _bx, _by, _bz, _br), (ball_id, ball_x, ball_y, ball_z, ball_r)))
                     if _distance < pow_r:
-
-                        #TODO 自身体积增长
+                        log.warn('==userball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}.'.format(uid, pow_r, _distance, (_uid, _bid, _bx, _by, _bz, _br), (ball_id, ball_x, ball_y, ball_z, ball_r)))
+                        # 记录吞噬/被吞噬 玩家球的个数
+                        character.eat_num += 1
+                        self.__eat_num[uid] += 1
+                        if _be_eated_user and _be_eated_user.attrib:
+                            _be_eated_user.attrib.be_eated_num += 1
+                            self.__be_eated_num[_uid] += 1
+                        # 自身体积增长
                         _delta_radius[ball_id] = _delta_radius.setdefault(ball_id, ball_r) + (MULTIPLE_ENLARGE_USERBAL * _br / 100)
                         _ub.setHideBall(_bid)
                         _hide_ub_ids.append((_uid, _bid))
 
-        #TODO 食物球被吃后的出现规则
         data = list()
         _delta_ub_radius = list()
         for ball_id, ball_x, ball_y, ball_z, ball_r, pow_r in ball_info:
@@ -208,7 +219,7 @@ class PVPRoom(object):
             uids = self.__users.keys()
             uids.remove(uid)
             if uids:
-                log.warn('================broadcastUserball uid:{0}, uids:{1}, data:{2}).'.format(uid, uids, data))
+                log.warn('==broadcastUserball uid:{0}, uids:{1}, data:{2}).'.format(uid, uids, data))
                 send2client(uids, 'broadcastUserball', data)
 
         log.warn('================return uid:{0}, data:{1}).'.format(uid, data))
@@ -228,6 +239,7 @@ class PVPRoom(object):
         return NO_ERROR, None
 
     def _broadcastFoodball(self):
+        ''' 食物球被吃后的出现规则 '''
         _uids = self.__users.keys()
         _foodball_ids = self.__hide_foodball_ids.keys()
         _new_foodball_info = self._random_xyz(_foodball_ids)
