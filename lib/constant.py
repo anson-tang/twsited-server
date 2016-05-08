@@ -47,6 +47,10 @@ MAX_COMMON_RADIUS = 5000 # 公共球最大半径
 MAX_USER_COUNT = 20 # 房间最大玩家人数
 MAX_USERBALL_COUNT = 8 # 玩家球最大数量
 
+INIT_USERBALL_VOLUME = 8 # 玩家球初始体积
+INIT_FOODBALL_VOLUME = 4 # 食物球初始体积
+INIT_SPINEBALL_VOLUME = 40 # 刺球初始体积
+
 
 MULTIPLE_HIDE_USERBALL = 1.1 # 玩家球之间互吃的倍数 正常值
 MULTIPLE_ENLARGE_FOODBALL = 2 # 吃食物球的半径增长倍数 百分比

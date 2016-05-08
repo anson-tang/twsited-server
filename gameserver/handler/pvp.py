@@ -8,6 +8,7 @@
 import random
 import math
 
+from twisted.internet import defer
 from rpc import route
 from log import log
 from constant import *
@@ -18,6 +19,7 @@ from manager.pvpserver import g_PVPServer
 
 
 @route()
+@defer.inlineCallbacks
 def joinPVP(p, req):
     if hasattr(p, "uid"):
         log.debug('uid:{0}'.format(p.uid))
@@ -25,22 +27,24 @@ def joinPVP(p, req):
     else: # used to test
         log.error('client has not found uid.')
         uid = 3
-        return CONNECTION_LOSE, None
+        #defer.returnValue((CONNECTION_LOSE, None))
 
     user = g_UserMgr.getUserByUid(uid)
     if not user:
-        return CONNECTION_LOSE, None
+        defer.retuenValue((CONNECTION_LOSE, None))
 
-    _u, _f, _s, _t, _r = g_PVPServer.joinRoom(uid)
-    data = {'userball':_u, 'foodball':_f, 'spineball':_s, 'end_time':_t, 'rank':_r}
+    _u, _f, _s, _e, _t, _r = yield g_PVPServer.joinRoom(uid)
+    #_u, _f, _s, _e, _t, _r = g_PVPServer.joinRoom(uid)
+    data = {'userball':_u, 'foodball':_f, 'spineball':_s, 'end_time':_e, 'total':_t, 'rank':_r}
     log.warn('==============joinPVP userball:{0}'.format(_u))
-    return NO_ERROR, data
+    defer.returnValue((NO_ERROR, data))
 
 
 @route()
+@defer.inlineCallbacks
 def syncUserball(p, req):
     '''
-    @req: [[ball_id, ball_x, ball_y, ball_z, ball_r], ......]
+    @req: [[uid, ball_id, ball_x, ball_y, ball_z, ball_r, volume, speed], ......]
     '''
     if hasattr(p, "uid"):
         log.debug('uid:{0}'.format(p.uid))
@@ -48,19 +52,19 @@ def syncUserball(p, req):
     else: # used to test
         log.error('client has not found uid.')
         uid = 3
-        return CONNECTION_LOSE, None
+        #defer.returnValue((CONNECTION_LOSE, None))
 
     log.warn('==============req:{0}.'.format(req))
     user = g_UserMgr.getUserByUid(uid)
     if not user:
-        return CONNECTION_LOSE, None
+        defer.returnValue((CONNECTION_LOSE, None))
 
     room_obj = g_PVPServer.getRoomByUid(uid)
     if not room_obj:
-        return PVPROOM_LOSE, None
+        defer.returnValue((PVPROOM_LOSE, None))
 
-    err, data = room_obj.syncUserball(user.attrib, req)
-    return err, data
+    err, data = yield room_obj.syncUserball(user.attrib, req)
+    defer.returnValue((err, data))
 
 
 @route()

@@ -29,7 +29,7 @@ class Server(ServerFactory):
     @defer.inlineCallbacks
     def __migrate_accounts_registered(self):
         try:
-            yield redis.delete(HASH_NICKNAME_REGISTERED, HASH_MACHINE_CODE_REGISTERED, SET_RANK_USERBALL_WEIGHT)
+            yield redis.delete(HASH_NICKNAME_REGISTERED, HASH_MACHINE_CODE_REGISTERED, HASH_UID_MACHINE_CODE, SET_RANK_PVP_WEIGHT)
 
             db_conf = {'host': setting.DB_CONF['host'],
                 'port'       : setting.DB_CONF['port'],
@@ -47,7 +47,8 @@ class Server(ServerFactory):
             for _id, _machine_code, _nickname, _max_weight in _dataset:
                 yield redis.hset(HASH_NICKNAME_REGISTERED, _nickname, _id)
                 yield redis.hset(HASH_MACHINE_CODE_REGISTERED, _machine_code, _id)
-                yield redis.zadd(SET_RANK_USERBALL_WEIGHT, _id, -_max_weight)
+                yield redis.hset(HASH_UID_MACHINE_CODE, _id, _machine_code)
+                yield redis.zadd(SET_RANK_PVP_WEIGHT, _id, -_max_weight)
 
             cu.close()
             conn.close()

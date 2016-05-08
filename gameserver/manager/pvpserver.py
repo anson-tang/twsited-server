@@ -6,6 +6,7 @@
 # License: Copyright(c) 2015 Anson.Tang
 # Summary: 
 
+from twisted.internet import defer
 from log import log
 from constant import *
 from manager.pvproom import PVPRoom
@@ -19,6 +20,7 @@ class PVPServer(object):
         # just use to joinRoom function
         self.__curr_room = None
 
+    @defer.inlineCallbacks
     def joinRoom(self, uid):
         '''
         @return: all balls in current room.
@@ -29,11 +31,11 @@ class PVPServer(object):
             self.__curr_room = PVPRoom(_room_id)
             self.__rooms[_room_id] = self.__curr_room
  
-        ball_data = self.__curr_room.newUser(uid)
+        ball_data = yield self.__curr_room.newUser(uid)
         if self.__curr_room.count >= MAX_USER_COUNT:
             self.__curr_room = None
 
-        return ball_data
+        defer.returnValue(ball_data)
 
     def curr_room_id(self):
         return self.__curr_room.room_id 

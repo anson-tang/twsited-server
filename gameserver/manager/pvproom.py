@@ -9,11 +9,13 @@ import random
 import math
 
 from time import time
-from twisted.internet import reactor
+from twisted.internet import defer, reactor
 from log import log
 from system import *
 from constant import *
 from errorno import *
+from redis_constant import *
+from redis import redis
 from handler.broadcast import send2client
 from manager.gameuser import g_UserMgr
 
@@ -39,11 +41,12 @@ class Userball(object):
         max_z = int(math.sqrt(pow(radius,2) - pow(y,2)))
         z = random.randint(-max_z, max_z)
         x = random.choice((-1, 1)) * int(math.sqrt(pow(radius,2) - pow(y,2) - pow(z,2)))
-        self.__ball_dict[ball_id] = [self.__uid, ball_id, x, y, z, USERBALL_RADIUS]
+        self.__ball_dict[ball_id] = [self.__uid, ball_id, x, y, z, USERBALL_RADIUS, INIT_USERBALL_VOLUME, 0]
 
         return self.__ball_dict.values()
 
     def getAllBall(self):
+        log.error('--------- ball_dict:{0}'.format(self.__ball_dict))
         _all_ball = list()
         for _bid, _ball in self.__ball_dict.iteritems():
             if _bid in self.__hide_ball_ids:
@@ -59,42 +62,52 @@ class Userball(object):
         if ball_id in self.__ball_dict:
             del self.__ball_dict[ball_id]
 
+    def updateVolume(self, delta_volume):
+        for _bid, _volume in delta_volume.iteritems():
+            self.__ball_dict[_bid][6] = _volume
+
     def checkHideBall(self, ball_info=None):
         ''' check eat self '''
         if not ball_info:
             return list()
-        log.debug('=====test start ===== ball_info:{0}'.format(ball_info))
+        log.warn('=====test start ===== ball_info:{0}'.format(ball_info))
         ball_info = sorted(ball_info, key=lambda ball_info: ball_info[4], reverse=True)
+        self.__ball_dict = dict()
         for _b in ball_info:
-            _b.append(pow(_b[4], 2))
-            #_b.append(pow(_b[4]*COORDINATE_ENLARGE, 2))
+            if _b[0] != self.__uid:
+                log.error('invalid userball data. uid:{0}, ball_info:{1}'.format(self.__uid, ball_info))
+                continue
+            self.__ball_dict[_b[1]] = [_b[0], _b[1], _b[2], _b[3], _b[4], _b[5], _b[6], _b[7]]
+            _b.append(pow(_b[5], 2))
+
         total = len(ball_info)
         loop = 1
         hide_ids = list()
-        delta_radius = dict()
+        delta_volume = dict()
         new_ball_info = ball_info[:1]
         while loop < total:
-            ball_id, ball_x, ball_y, ball_z, ball_r, pow_r = ball_info[loop-1]
+            uid, ball_id, ball_x, ball_y, ball_z, ball_r, ball_v, ball_s, pow_r = ball_info[loop-1]
             if ball_id in hide_ids:
                 loop = loop + 1
                 continue
-            for _bid, _bx, _by, _bz, _br, _pr in ball_info[loop:]:
+            for _uid, _bid, _bx, _by, _bz, _br, _bv, _bs, _pr in ball_info[loop:]:
                 if _bid in hide_ids or not (_bx or _by or _bz):
                     continue
-                if ball_r < MULTIPLE_HIDE_USERBALL*_br:
-                    new_ball_info.append((_bid, _bx, _by, _bz, _br, _pr))
+                if ball_v < MULTIPLE_HIDE_USERBALL*_bv:
+                    new_ball_info.append((_uid, _bid, _bx, _by, _bz, _br, _bv, _bs, _pr))
                     continue
                 _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
                 if _distance < pow_r:
                     hide_ids.append(_bid)
-                    delta_radius[ball_id] = delta_radius.setdefault(ball_id, ball_r) + (MULTIPLE_ENLARGE_USERBALL * _br / 100)
+                    del self.__ball_dict[_bid]
+                    delta_volume[ball_id] = delta_volume.setdefault(ball_id, ball_v) + _bv
                 else:
-                    new_ball_info.append((_bid, _bx, _by, _bz, _br, _pr))
+                    new_ball_info.append((_uid, _bid, _bx, _by, _bz, _br, _bv, _bs, _pr))
             loop = loop + 1
 
         hide_ids = [(self.__uid, _bid) for _bid in hide_ids]
-        log.debug('=====test final ===== hide_ids:{0}, delta_radius:{1}, new_ball_info:{2}'.format(hide_ids, delta_radius, new_ball_info))
-        return hide_ids, delta_radius, new_ball_info
+        log.debug('=====test final ===== hide_ids:{0}, delta_volume:{1}, new_ball_info:{2}'.format(hide_ids, delta_volume, new_ball_info))
+        return hide_ids, delta_volume, new_ball_info
 
 
 class PVPRoom(object):
@@ -123,6 +136,7 @@ class PVPRoom(object):
     def room_id(self):
         return self.__id
 
+    @defer.inlineCallbacks
     def newUser(self, uid):
         if not self.__users:
             # common foodball and spineball
@@ -133,6 +147,7 @@ class PVPRoom(object):
             self.__end_time = int((time() + PVP_SECONDS)*1000)
             self.__eat_num.setdefault(uid, 0)
             self.__be_eated_num.setdefault(uid, 0)
+            log.error('----------__be_eated_num:{0}, eat_num:{1}'.format(self.__be_eated_num, self.__eat_num))
         else:
             foodball_conf = self.__foodball.values()
             spineball_conf = self.__spineball.values()
@@ -144,41 +159,47 @@ class PVPRoom(object):
             if _ub.uid == uid:
                 continue
             all_userball.extend(_ub.getAllBall())
+        yield redis.zadd(SER_RANK_ROOM_VOLUME%self.__id, uid, -INIT_USERBALL_VOLUME)
         #TODO get weight ranklist from redis
-        rank = len(self.__users)
+        test_data = yield redis.zrange(SER_RANK_ROOM_VOLUME%self.__id, 0, -1, True)
+        rank = yield redis.zrank(SER_RANK_ROOM_VOLUME%self.__id, uid)
+        log.error('room volue data: {0}, uid:{1}, rank:{2}'.format(test_data, uid, rank))
+        rank = int(rank) + 1 if rank else 0
+        total = len(self.__users)
 
-        return (all_userball, foodball_conf, spineball_conf, self.__end_time, rank)
+        defer.returnValue((all_userball, foodball_conf, spineball_conf, self.__end_time, total, rank))
 
     def isMember(self, uid):
         return uid in self.__users
 
+    @defer.inlineCallbacks
     def syncUserball(self, character, ball_info):
         if not (ball_info and isinstance(ball_info[0], list)):
             log.error("args error. uid:{0}, ball_info:{1}.".format(uid, ball_info))
-            return ARGS_ERROR, None
+            defer.returnValue((ARGS_ERROR, None))
 
         uid = character.attrib_id
         if uid not in self.__users:
-            return PVPROOM_LOSE, None
+            defer.returnValue((PVPROOM_LOSE, None))
 
         _hide_fb_ids = list()
         userball_obj = self.__users[uid]
-        _hide_ub_ids, _delta_radius, ball_info = userball_obj.checkHideBall(ball_info)
+        _hide_ub_ids, _delta_volume, ball_info = userball_obj.checkHideBall(ball_info)
 
-        _delta_br =  int(FOODBALL_RADIUS * MULTIPLE_ENLARGE_FOODBALL * 0.01)
+        #_delta_br =  int(FOODBALL_RADIUS * MULTIPLE_ENLARGE_FOODBALL * 0.01)
         _max_hide = 1
         for _bid, _bx, _by, _bz in self.__foodball.itervalues():
-            for ball_id, ball_x, ball_y, ball_z, ball_r, pow_r in ball_info:
+            for _, ball_id, ball_x, ball_y, ball_z, ball_r, ball_v, ball_s, pow_r in ball_info:
                 # 和食物球 其它玩家球比较半径大小 计算直线距离
                 # 玩家球 分裂后的半径也会比食物球大吗？
                 _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
+                log.warn('--------------- foodball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}, _delta_volume:{5}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz), _delta_volume))
                 if _distance < pow_r:
                     # 自身体积增长
-                    _delta_radius[ball_id] = _delta_radius.setdefault(ball_id, ball_r) + _delta_br
-                    log.warn('==foodball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}, _delta_br:{5} _delta_radius:{6}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz), _delta_br, _delta_radius))
+                    _delta_volume[ball_id] = _delta_volume.setdefault(ball_id, ball_v) + INIT_FOODBALL_VOLUME
                     _hide_fb_ids.append(_bid)
-                    if len(_hide_fb_ids) > 2:
-                        break
+                if len(_hide_fb_ids) > 2:
+                    break
         for _bid in _hide_fb_ids:
             self.__hide_foodball_ids[_bid] = 0
             if _bid in self.__foodball:
@@ -188,33 +209,42 @@ class PVPRoom(object):
             if _ub.uid == uid:
                 continue
             _all_ball = _ub.getAllBall()
-            for _uid, _bid, _bx, _by, _bz, _br in iter(_all_ball):
+            log.error('--------------- _all_ball:{0}'.format(_all_ball))
+            for _uid, _bid, _bx, _by, _bz, _br, _bv, _bs in iter(_all_ball):
                 _be_eated_user = g_UserMgr.getUserByUid(_uid)
-                for ball_id, ball_x, ball_y, ball_z, ball_r, pow_r in ball_info:
-                    if MULTIPLE_HIDE_USERBALL*_br > ball_r:
+                for _, ball_id, ball_x, ball_y, ball_z, ball_r, ball_v, ball_s, pow_r in ball_info:
+                    log.error('--------------- volume self:{0}, others:'.format(ball_v, MULTIPLE_HIDE_USERBALL*_bv))
+                    if MULTIPLE_HIDE_USERBALL*_bv > ball_v:
                         continue
                     _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
+                    log.error('---------------- userball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}.'.format(uid, pow_r, _distance, (_uid, _bid, _bx, _by, _bz, _br), (ball_id, ball_x, ball_y, ball_z, ball_r)))
                     if _distance < pow_r:
-                        log.warn('==userball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}.'.format(uid, pow_r, _distance, (_uid, _bid, _bx, _by, _bz, _br), (ball_id, ball_x, ball_y, ball_z, ball_r)))
                         # 记录吞噬/被吞噬 玩家球的个数
                         character.eat_num += 1
                         self.__eat_num[uid] += 1
                         if _be_eated_user and _be_eated_user.attrib:
                             _be_eated_user.attrib.be_eated_num += 1
-                            self.__be_eated_num[_uid] += 1
+                            self.__be_eated_num[_uid] = self.__be_eated_num.setdefault(_uid, 0) + 1
+
                         # 自身体积增长
-                        _delta_radius[ball_id] = _delta_radius.setdefault(ball_id, ball_r) + (MULTIPLE_ENLARGE_USERBAL * _br / 100)
+                        _delta_volume[ball_id] = _delta_volume.setdefault(ball_id, ball_v) + _bv
                         _ub.setHideBall(_bid)
                         _hide_ub_ids.append((_uid, _bid))
+                        yield redis.zincrby(SER_RANK_ROOM_VOLUME%self.__id, _uid, _bv)
 
         data = list()
-        _delta_ub_radius = list()
-        for ball_id, ball_x, ball_y, ball_z, ball_r, pow_r in ball_info:
-            ball_r = _delta_radius[ball_id] if ball_id in _delta_radius else ball_r
-            _delta_ub_radius.append((uid, ball_id, ball_x, ball_y, ball_z, ball_r))
-            #_delta_ub_radius = [(uid, _bid, _br) for _bid, _br in _delta_radius.iteritems()]
-        if (_hide_ub_ids or _hide_fb_ids or _delta_ub_radius):
-            data = (_hide_ub_ids, _hide_fb_ids, _delta_ub_radius)
+        _delta_ub_data = list()
+        _delta_ub_volume = 0
+        for _, ball_id, ball_x, ball_y, ball_z, ball_r, ball_v, ball_s, pow_r in ball_info:
+            ball_v = _delta_volume[ball_id] if ball_id in _delta_volume else ball_v
+            _delta_ub_data.append((uid, ball_id, ball_x, ball_y, ball_z, ball_r, ball_v, ball_s))
+            _delta_ub_volume += ball_v
+        yield redis.zadd(SER_RANK_ROOM_VOLUME%self.__id, uid, -_delta_ub_volume)
+        # 更新自己的球体积信息
+        userball_obj.updateVolume(_delta_volume)
+            #_delta_ub_data = [(uid, _bid, _br) for _bid, _br in _delta_volume.iteritems()]
+        if (_hide_ub_ids or _hide_fb_ids or _delta_ub_data):
+            data = [_hide_ub_ids, _hide_fb_ids, _delta_ub_data]
             #TODO broadcast
             uids = self.__users.keys()
             uids.remove(uid)
@@ -222,8 +252,12 @@ class PVPRoom(object):
                 log.warn('==broadcastUserball uid:{0}, uids:{1}, data:{2}).'.format(uid, uids, data))
                 send2client(uids, 'broadcastUserball', data)
 
+        _rank = yield redis.zrank(SER_RANK_ROOM_VOLUME%self.__id, uid)
+        _rank = int(_rank) + 1 if _rank else 0
+        _total = len(self.__users)
+        data.append((_rank, _total))
         log.warn('================return uid:{0}, data:{1}).'.format(uid, data))
-        return NO_ERROR, data
+        defer.returnValue((NO_ERROR, data))
 
     def syncSpineball(self, uid, ball_info):
         if not (ball_info and isinstance(ball_info[0], list)):
@@ -237,6 +271,18 @@ class PVPRoom(object):
             send2client(uids, 'broadcastSpineball', ball_info)
 
         return NO_ERROR, None
+
+    @defer.inlineCallbacks
+    def finalRanklist(self):
+        ''' 战斗结算 '''
+        final_data = list()
+        _volume_data = yield redis.zrange(SER_RANK_ROOM_VOLUME%self.__id, 0, 5, True)
+        for _rank, (_uid, _volume) in enumerate(_volume_data):
+            _machine_code = yield redis.hget(HASH_UID_MACHINE_CODE, _id)
+            _eat_num = self.__eat_num.get(_uid, 0)
+            _be_eated_num = self.__be_eated_num.get(_uid, 0)
+            final_data.append((_rank+1, _uid, _machine_code, _volume*10, _eat_num, _be_eated_num))
+        defer.returnValue(final_data)
 
     def _broadcastFoodball(self):
         ''' 食物球被吃后的出现规则 '''
