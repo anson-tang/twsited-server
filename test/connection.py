@@ -6,6 +6,7 @@
 # License: Copyright(c) 2015 Anson.Tang
 # Summary: 
 
+import time
 import sys
 from os.path import abspath, dirname, normpath, join
 PREFIX = normpath(dirname(abspath(__file__)))
@@ -19,6 +20,7 @@ from rpc import GeminiRPCProtocol
 
 class ConnectorCreator(protocol.ClientCreator):
     def __init__(self, service, *args, **kwargs):
+        print('------------RPC init. args:{0}, kwargs:{1}'.format(args, kwargs))
         self.factory = service
         protocol.ClientCreator.__init__(self, reactor, GeminiRPCProtocol, *args, **kwargs)
 
@@ -34,9 +36,8 @@ class ConnectorCreator(protocol.ClientCreator):
 
 @defer.inlineCallbacks
 def funcHandlers(p, func, args):
-    p.uid = 3
-    error, data = yield p.call(func, args)
     print "login p:", p, ", p.uid:", p.uid, ", func:", func, ", args:", args
+    error, data = yield p.call(func, args)
     print "error: ", error
     if isinstance(data, dict):
         for _k, _v in data.iteritems():
@@ -58,24 +59,42 @@ PORT = 12010
 func_handlers = {
         1: ('login', ['kkkkkkk']),
         2: ('joinPVP', [3]),
-        3: ('syncUserball', [(1, 9849, 0, -1731, 100, 8, 0)]),
+        3: ('syncUserball', [(3, 1, 9849, 0, -1731, 100, 8, 0)]),
         4: ('room_ranklist', [39]),
         5: ('world_ranklist', []),
+        'q': 'quit',
+        'e': 'exit',
         }
 
 
 def connectServer():
+    #handler_id = int(sys.argv[1])
+    for _k, _v in func_handlers.iteritems():
+        print '    ', _k, ': ', _v
+    handler_id = raw_input('Please input the number: ')
+    if handler_id in ('q', 'e'):
+        reactor.stop()
+        return
+
+    while True:
+        try:
+            handler_id = raw_input('Please input the number: ')
+            handler_id = int(handler_id)
+            if handler_id in func_handlers:
+                break
+            else:
+                print "fail args ........"
+        except Exception as e:
+            print "fail args ........"
+
     conn = ConnectorCreator('')
     d = conn.connect(HOST, PORT)
     print 'init d: ', d
 
-    handler_id = int(sys.argv[1])
-    func_name, args = func_handlers.get(handler_id, ('', ''))
+    func_name, args = func_handlers[handler_id]
     print('func_name:{0}, args:{1}.'.format(func_name, args))
     if func_name:
         d.addCallbacks(funcHandlers, errback, (func_name, args,))
-    else:
-        print "fail args ........"
 
     d.addCallback(finish)
 

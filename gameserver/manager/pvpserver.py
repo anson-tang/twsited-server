@@ -80,7 +80,7 @@ class PVPServer(object):
         _self_eat_num = abs(int(_self_eat_num)) if _self_eat_num else 0
         _self_be_eated_num = yield redis.hget(SET_RANK_ROOM_EATED%room_id, self_uid)
         _self_be_eated_num = abs(int(_self_be_eated_num)) if _self_be_eated_num else 0
-        self_data = (_self_rank, self_uid, _self_machine_code, _self_eat_num, _self_be_eated_num)
+        self_data = (_self_rank, self_uid, _self_machine_code, _self_weight, _self_eat_num, _self_be_eated_num)
 
         defer.returnValue((other_data, self_data))
 

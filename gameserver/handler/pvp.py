@@ -26,8 +26,7 @@ def joinPVP(p, req):
         uid = p.uid
     else: # used to test
         log.error('client has not found uid.')
-        uid = 3
-        #defer.returnValue((CONNECTION_LOSE, None))
+        defer.returnValue((CONNECTION_LOSE, None))
 
     user = g_UserMgr.getUserByUid(uid)
     if not user:
@@ -49,8 +48,7 @@ def syncUserball(p, req):
         uid = p.uid
     else: # used to test
         log.error('client has not found uid.')
-        uid = 3
-        #defer.returnValue((CONNECTION_LOSE, None))
+        defer.returnValue((CONNECTION_LOSE, None))
 
     log.warn('==============req:{0}.'.format(req))
     user = g_UserMgr.getUserByUid(uid)

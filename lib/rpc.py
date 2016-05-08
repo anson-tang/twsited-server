@@ -92,7 +92,8 @@ class GeminiRPCProtocol(protocol.Protocol, TimeoutMixin):
     HEADER_LENGTH   = struct.calcsize(HEADER_FORMAT)
     TIMEOUT         = 600
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        log.error('------------RPC init. args:{0}, kwargs:{1}'.format(args, kwargs))
         self.seq = 0
         self.buff = ''
         #self.buff = array('c')
