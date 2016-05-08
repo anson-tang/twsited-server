@@ -33,29 +33,16 @@ class ConnectorCreator(protocol.ClientCreator):
         print("Can't connect Server!", error)
 
 @defer.inlineCallbacks
-def service_login(p, args):
-    data = yield p.call('login', args)
-    print "login p: ", p, "args: ", args
-    print "login return data: ", data, type(data)
-    defer.returnValue(0)
-
-@defer.inlineCallbacks
-def join_pvp(p, args):
-    error, data = yield p.call('joinPVP', args)
-    print "login p: ", p, "args: ", args
+def funcHandlers(p, func, args):
+    p.uid = 3
+    error, data = yield p.call(func, args)
+    print "login p:", p, ", p.uid:", p.uid, ", func:", func, ", args:", args
     print "error: ", error
-    print "login return data: "
-    if not error:
-        for _key in data.keys():
-            print '\t', _key, len(data[_key]) if isinstance(data[_key], (tuple, list)) else data[_key]
-    defer.returnValue(0)
-
-@defer.inlineCallbacks
-def syncUserball(p, args):
-    error, data = yield p.call('syncUserball', args)
-    print "login p: ", p, "args: ", args
-    print "error: ", error
-    print "login return data: ", data
+    if isinstance(data, dict):
+        for _k, _v in data.iteritems():
+            print _k, ': ', _v
+    else:
+        print "login return data: ", data
     defer.returnValue(0)
 
 def errback(error):
@@ -68,21 +55,25 @@ def finish(sgn):
 HOST = '120.26.229.89' #'127.0.0.1'
 PORT = 12010
 
+func_handlers = {
+        1: ('login', ['kkkkkkk']),
+        2: ('joinPVP', [3]),
+        3: ('syncUserball', [(1, 9849, 0, -1731, 100, 8, 0)]),
+        4: ('room_ranklist', [39]),
+        5: ('world_ranklist', []),
+        }
+
+
 def connectServer():
-    conn = ConnectorCreator(service_login)
+    conn = ConnectorCreator('')
     d = conn.connect(HOST, PORT)
     print 'init d: ', d
 
     handler_id = int(sys.argv[1])
-    if handler_id == 1:
-        args = ['kkkkkkk']
-        d.addCallbacks(service_login, errback, (args,))
-    elif handler_id == 2:
-        args = [3]
-        d.addCallbacks(join_pvp, errback, (args,))
-    elif handler_id == 3:
-        args = [(1, 9849, 0, -1731, 100)]
-        d.addCallbacks(syncUserball, errback, (args,))
+    func_name, args = func_handlers.get(handler_id, ('', ''))
+    print('func_name:{0}, args:{1}.'.format(func_name, args))
+    if func_name:
+        d.addCallbacks(funcHandlers, errback, (func_name, args,))
     else:
         print "fail args ........"
 

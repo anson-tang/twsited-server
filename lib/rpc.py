@@ -97,8 +97,8 @@ class GeminiRPCProtocol(protocol.Protocol, TimeoutMixin):
         self.buff = ''
         #self.buff = array('c')
         self.deferreds = {}
-        self.cid = 0
-        self.account = ""
+        self.uid = 0
+        self.nickname = ""
         self.session_key = ""
         self.lose_connect = True
 

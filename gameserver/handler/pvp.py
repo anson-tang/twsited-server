@@ -31,12 +31,10 @@ def joinPVP(p, req):
 
     user = g_UserMgr.getUserByUid(uid)
     if not user:
-        defer.retuenValue((CONNECTION_LOSE, None))
+        defer.returnValue((CONNECTION_LOSE, None))
 
-    _u, _f, _s, _e, _t, _r = yield g_PVPServer.joinRoom(uid)
-    #_u, _f, _s, _e, _t, _r = g_PVPServer.joinRoom(uid)
-    data = {'userball':_u, 'foodball':_f, 'spineball':_s, 'end_time':_e, 'total':_t, 'rank':_r}
-    log.warn('==============joinPVP userball:{0}'.format(_u))
+    data = yield g_PVPServer.joinRoom(uid)
+    log.warn('==============joinPVP userball:{0}'.format(data['userball']))
     defer.returnValue((NO_ERROR, data))
 
 
@@ -74,13 +72,17 @@ def syncSpineball(p, req):
         uid = p.uid
     else: # used to test
         log.error('client has not found uid.')
-        return CONNECTION_LOSE, None
+        return(CONNECTION_LOSE, None)
 
     user = g_UserMgr.getUserByUid(uid)
     if not user:
-        return PVPROOM_LOSE, None
+        return(PVPROOM_LOSE, None)
+
+    room_obj = g_PVPServer.getRoomByUid(uid)
+    if not room_obj:
+        return(PVPROOM_LOSE, None)
 
     err, data = room_obj.syncSpineball(uid, req)
-    return err, data
+    return(err, data)
 
 

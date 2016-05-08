@@ -9,9 +9,11 @@ from twisted.internet import defer
 
 from rpc import route
 from log import log
+from redis import redis
 from constant import *
 from errorno import *
 from manager.gameuser import g_UserMgr
+from manager.pvpserver import g_PVPServer
 
 
 @route()
@@ -23,16 +25,45 @@ def room_ranklist(p, req):
     else: # used to test
         log.error('client has not found uid.')
         uid = 3
-        defer.returnValue((CONNECTION_LOSE, None))
+        #defer.returnValue((CONNECTION_LOSE, None))
 
     user = g_UserMgr.getUserByUid(uid)
     if not user:
         defer.returnValue((CONNECTION_LOSE, None))
 
-    room_obj = g_PVPServer.getRoomByUid(uid)
-    if not room_obj:
-        defer.returnValue((PVPROOM_LOSE, None))
+    room_id, = req
+    data = yield g_PVPServer.getRoomRanklist(room_id, uid)
 
-    # rank, uid, machine_code, weight, eat_num, be_eated_num
-    err, data = yield room_obj.finalRanklist()
-    defer.returnValue((err, data))
+    defer.returnValue((NO_ERROR, data))
+
+
+@route()
+@defer.inlineCallbacks
+def world_ranklist(p, req):
+    if hasattr(p, "uid"):
+        log.debug('uid:{0}'.format(p.uid))
+        uid = p.uid
+    else: # used to test
+        log.error('client has not found uid.')
+        uid = 3
+        #defer.returnValue((CONNECTION_LOSE, None))
+
+    user = g_UserMgr.getUserByUid(uid)
+    if not user:
+        defer.returnValue((CONNECTION_LOSE, None))
+
+    data = list()
+    other_data = list()
+    weight_data = yield redis.zrange(SET_RANK_PVP_WEIGHT, 0, 10, True)
+    for _rank, (_uid, _weight) in enumerate(weight_data):
+        _machine_code = yield redis.hget(HASH_UID_MACHINE_CODE, _uid)
+        other_data.append(_rank+1, _uid, _machine_code, _weight)
+
+    self_rank = yield redis.zrank(SET_RANK_PVP_WEIGHT, uid)
+    self_rank = 0 if self_rank is None else int(self_rank) + 1
+    self_machine_code = yield redis.hget(HASH_UID_MACHINE_CODE, uid)
+    self_weight = yield redis.zscore(SET_RANK_PVP_WEIGHT, uid)
+    self_weight = 0 if self_weight is None else abs(self_weight)
+
+    data = (other_data, (self_rank, uid, self_weight))
+    defer.returnValue((NO_ERROR, data))

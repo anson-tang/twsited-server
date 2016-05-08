@@ -13,7 +13,6 @@ from manager.gameuser import g_UserMgr
 def send2client(uids, func, args):
     _remain = g_UserMgr.room_users(uids)
     __broadcast(_remain, func, args)
-    log.debug('================broadcast user ({0}) args: {1} success.'.format(uids, args))
 
 
 @route()
@@ -29,6 +28,7 @@ def room_broadcast(p, req):
     __broadcast(_remain, func, args)
 
 def __broadcast(user_remain, func, args):
+    log.debug('================__broadcast user_remain:{0}, func:{1}, args: {2}.'.format(user_remain, func, args))
     if user_remain:
         i = 0
         while i < MAX_BROADCAST_PER_LOOP:

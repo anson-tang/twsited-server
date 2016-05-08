@@ -27,6 +27,7 @@ def login(p, req):
         defer.returnValue((MACHINE_CODE_ERROR, {}))
 
     uid = yield redis.hget(HASH_MACHINE_CODE_REGISTERED, machine_code)
+    p.uid = uid
     info = dict()
     # 创建新玩家
     if not uid:
