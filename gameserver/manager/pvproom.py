@@ -64,19 +64,21 @@ class Userball(object):
         for _bid, _volume in delta_volume.iteritems():
             self.__ball_dict[_bid][6] = _volume
 
-    def checkHideBall(self, ball_info=None):
+    def checkHideBall(self, base_ball=None):
         ''' check eat self '''
-        if not ball_info:
+        if not base_ball:
             return list()
-        log.warn('=====test start ===== ball_info:{0}'.format(ball_info))
-        ball_info = sorted(ball_info, key=lambda ball_info: ball_info[4], reverse=True)
+        log.warn('=====test start ===== base_ball:{0}'.format(base_ball))
+        base_ball = sorted(base_ball, key=lambda base_ball: base_ball[6], reverse=True)
         self.__ball_dict = dict()
-        for _b in ball_info:
+        ball_info = list()
+        for _b in base_ball:
             if _b[0] != self.__uid:
-                log.error('invalid userball data. uid:{0}, ball_info:{1}'.format(self.__uid, ball_info))
+                log.error('invalid userball data. uid:{0}, ball:{1}'.format(self.__uid, _b))
                 continue
             self.__ball_dict[_b[1]] = [_b[0], _b[1], _b[2], _b[3], _b[4], _b[5], _b[6], _b[7]]
             _b.append(pow(_b[5], 2))
+            ball_info.append(_b)
 
         total = len(ball_info)
         loop = 1
@@ -103,8 +105,10 @@ class Userball(object):
                     new_ball_info.append((_uid, _bid, _bx, _by, _bz, _br, _bv, _bs, _pr))
             loop = loop + 1
 
+        log.warn('-------test hide_ids:{0} new_ball_info:{1}'.format(hide_ids, new_ball_info))
+        new_ball_info = [ _b for _b in ball_info if _b[1] not in hide_ids]
         hide_ids = [(self.__uid, _bid) for _bid in hide_ids]
-        log.debug('=====test final ===== hide_ids:{0}, delta_volume:{1}, new_ball_info:{2}'.format(hide_ids, delta_volume, new_ball_info))
+        log.warn('=====test final ===== hide_ids:{0}, delta_volume:{1}, new_ball_info:{2}'.format(hide_ids, delta_volume, new_ball_info))
         return hide_ids, delta_volume, new_ball_info
 
 
@@ -231,7 +235,7 @@ class PVPRoom(object):
             for _uid, _bid, _bx, _by, _bz, _br, _bv, _bs in iter(_all_ball):
                 _be_eated_user = g_UserMgr.getUserByUid(_uid)
                 for _, ball_id, ball_x, ball_y, ball_z, ball_r, ball_v, ball_s, pow_r in ball_info:
-                    log.error('--------------- volume self:{0}, others:'.format(ball_v, MULTIPLE_HIDE_USERBALL*_bv))
+                    log.error('--------------- volume self:{0}, others:{1}'.format(ball_v, MULTIPLE_HIDE_USERBALL*_bv))
                     if MULTIPLE_HIDE_USERBALL*_bv > ball_v:
                         continue
                     _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
