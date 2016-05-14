@@ -50,7 +50,6 @@ def syncUserball(p, req):
         log.error('client has not found uid.')
         defer.returnValue((CONNECTION_LOSE, None))
 
-    log.warn('==============req:{0}.'.format(req))
     user = g_UserMgr.getUserByUid(uid)
     if not user:
         defer.returnValue((CONNECTION_LOSE, None))

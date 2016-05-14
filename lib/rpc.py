@@ -93,7 +93,6 @@ class GeminiRPCProtocol(protocol.Protocol, TimeoutMixin):
     TIMEOUT         = 600
 
     def __init__(self, *args, **kwargs):
-        log.error('------------RPC init. args:{0}, kwargs:{1}'.format(args, kwargs))
         self.seq = 0
         self.buff = ''
         #self.buff = array('c')

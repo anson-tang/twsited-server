@@ -31,15 +31,12 @@ class PVPServer(object):
         if self.__curr_room and (self.__curr_room.count >= MAX_USER_COUNT or \
                 self.__curr_room.isEnd):
             del self.__rooms[self.__curr_room.room_id]
-            log.error('------- curr_room.count:{0}, isEnd:{1}.'.format(self.__curr_room.count, self.__curr_room.isEnd))
             self.__curr_room = None
 
         if not self.__curr_room:
             # new a room and get last room_id
             _room_id = yield redis.get(STRING_LAST_ROOM_ID)
-            log.error('-----_last_room_id:{0}'.format(_room_id))
             _room_id = int(_room_id) + 1 if _room_id else 1
-            log.error('-----_curr_room_id:{0}'.format(_room_id))
             yield redis.set(STRING_LAST_ROOM_ID, _room_id)
             self.__curr_room = PVPRoom(_room_id)
             self.__rooms[_room_id] = self.__curr_room

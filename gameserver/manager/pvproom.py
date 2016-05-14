@@ -32,14 +32,17 @@ class Userball(object):
     def uid(self):
         return self.__uid
 
-    def initBall(self):
+    def initBall(self, count):
+        '''
+        @param: count-房间当前人数作为资源ID返回给客户端
+        '''
         ball_id = 1
         radius = COMMON_RADIUS
         y = random.randint(-radius, radius)
         max_z = int(math.sqrt(pow(radius,2) - pow(y,2)))
         z = random.randint(-max_z, max_z)
         x = random.choice((-1, 1)) * int(math.sqrt(pow(radius,2) - pow(y,2) - pow(z,2)))
-        self.__ball_dict[ball_id] = [self.__uid, ball_id, x, y, z, USERBALL_RADIUS, INIT_USERBALL_VOLUME, 0]
+        self.__ball_dict[ball_id] = [self.__uid, ball_id, x, y, z, USERBALL_RADIUS, INIT_USERBALL_VOLUME, count]
 
         return self.__ball_dict.values()
 
@@ -161,16 +164,17 @@ class PVPRoom(object):
             foodball_conf = self.__foodball.values()
             spineball_conf = self.__spineball.values()
             self.__end_time = int((time() + PVP_SECONDS)*1000)
-            self.__eat_num.setdefault(uid, 0)
-            self.__be_eated_num.setdefault(uid, 0)
-            reactor.callLater(PVP_SECONDS, self._broadcastFoodball)
+            #reactor.callLater(PVP_SECONDS, self._broadcastFoodball)
         else:
             foodball_conf = self.__foodball.values()
             spineball_conf = self.__spineball.values()
 
+        self.__eat_num.setdefault(uid, 0)
+        self.__be_eated_num.setdefault(uid, 0)
+
         userball_obj = Userball(uid)
         self.__users[uid] = userball_obj
-        all_userball = userball_obj.initBall()
+        all_userball = userball_obj.initBall(self.count)
         for _ub in self.__users.itervalues():
             if _ub.uid == uid:
                 continue
@@ -199,6 +203,7 @@ class PVPRoom(object):
         if uid not in self.__users:
             defer.returnValue((PVPROOM_LOSE, None))
 
+        log.warn("room uids:{0}, __eat_num:{1}, __be_eated_num:{2}.".format(self.__users.keys(), self.__eat_num, self.__be_eated_num))
         _hide_fb_ids = list()
         userball_obj = self.__users[uid]
         _hide_ub_ids, _delta_volume, ball_info = userball_obj.checkHideBall(ball_info)

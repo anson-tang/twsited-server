@@ -28,7 +28,7 @@ def room_broadcast(p, req):
     __broadcast(_remain, func, args)
 
 def __broadcast(user_remain, func, args):
-    log.debug('================__broadcast user_remain:{0}, func:{1}, args: {2}.'.format(user_remain, func, args))
+    log.error('================__broadcast user_remain:{0}, func:{1}, args: {2}.'.format(len(user_remain), func, args))
     if user_remain:
         i = 0
         while i < MAX_BROADCAST_PER_LOOP:
@@ -39,15 +39,16 @@ def __broadcast(user_remain, func, args):
                     if hasattr(_user.p, 'transport'):
                         if _user.p.transport:
                             _user.p.send(func, args)
+                            log.warn('uid:{0}, func:{1}, args:{2}'.format(_user.uid, func, args))
                         else:
-                            log.warn('__broadcast. cid:{0}, unknown t:{1}.'.format(_user.cid, _user.p.transport))
-                            g_UserMgr.del_zombie_user( _user.cid )
+                            log.warn('__broadcast. uid:{0}, unknown t:{1}.'.format(_user.uid, _user.p.transport))
+                            g_UserMgr.del_zombie_user( _user.uid )
                     else:
-                        log.warn('__broadcast. cid:{0}, the p has no transport attribute..'.format(_user.cid))
-                        g_UserMgr.del_zombie_user( _user.cid )
+                        log.warn('__broadcast. uid:{0}, the p has no transport attribute..'.format(_user.uid))
+                        g_UserMgr.del_zombie_user( _user.uid )
                 else:
-                    log.warn('__broadcast. cid:{0}, the user has no p attribute..'.format(_user.cid))
-                    g_UserMgr.del_zombie_user( _user.cid )
+                    log.warn('__broadcast. uid:{0}, the user has no p attribute..'.format(_user.uid))
+                    g_UserMgr.del_zombie_user( _user.uid )
             else:
                 log.info('__broadcast. Unknown user.')
 
