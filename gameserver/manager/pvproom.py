@@ -44,7 +44,6 @@ class Userball(object):
         return self.__ball_dict.values()
 
     def getAllBall(self):
-        log.error('--------- ball_dict:{0}'.format(self.__ball_dict))
         _all_ball = list()
         for _bid, _ball in self.__ball_dict.iteritems():
             if _bid in self.__hide_ball_ids:
@@ -68,7 +67,6 @@ class Userball(object):
         ''' check eat self '''
         if not base_ball:
             return list()
-        log.warn('=====test start ===== base_ball:{0}'.format(base_ball))
         base_ball = sorted(base_ball, key=lambda base_ball: base_ball[6], reverse=True)
         self.__ball_dict = dict()
         ball_info = list()
@@ -105,10 +103,8 @@ class Userball(object):
                     new_ball_info.append((_uid, _bid, _bx, _by, _bz, _br, _bv, _bs, _pr))
             loop = loop + 1
 
-        log.warn('-------test hide_ids:{0} new_ball_info:{1}'.format(hide_ids, new_ball_info))
         new_ball_info = [ _b for _b in ball_info if _b[1] not in hide_ids]
         hide_ids = [(self.__uid, _bid) for _bid in hide_ids]
-        log.warn('=====test final ===== hide_ids:{0}, delta_volume:{1}, new_ball_info:{2}'.format(hide_ids, delta_volume, new_ball_info))
         return hide_ids, delta_volume, new_ball_info
 
 
@@ -167,7 +163,6 @@ class PVPRoom(object):
             self.__end_time = int((time() + PVP_SECONDS)*1000)
             self.__eat_num.setdefault(uid, 0)
             self.__be_eated_num.setdefault(uid, 0)
-            log.error('----------__be_eated_num:{0}, eat_num:{1}'.format(self.__be_eated_num, self.__eat_num))
             reactor.callLater(PVP_SECONDS, self._broadcastFoodball)
         else:
             foodball_conf = self.__foodball.values()
@@ -216,7 +211,7 @@ class PVPRoom(object):
                 # 玩家球 分裂后的半径也会比食物球大吗？
                 _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
                 if _distance < pow_r:
-                    log.warn('--------------- foodball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}, _delta_volume:{5}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz), _delta_volume))
+                    log.debug('--------------- eated foodball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}, _delta_volume:{5}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz), _delta_volume))
                     # 自身体积增长
                     _delta_volume[ball_id] = _delta_volume.setdefault(ball_id, ball_v) + INIT_FOODBALL_VOLUME
                     _hide_fb_ids.append(_bid)
@@ -231,16 +226,14 @@ class PVPRoom(object):
             if _ub.uid == uid:
                 continue
             _all_ball = _ub.getAllBall()
-            log.error('--------------- _all_ball:{0}'.format(_all_ball))
             for _uid, _bid, _bx, _by, _bz, _br, _bv, _bs in iter(_all_ball):
                 _be_eated_user = g_UserMgr.getUserByUid(_uid)
                 for _, ball_id, ball_x, ball_y, ball_z, ball_r, ball_v, ball_s, pow_r in ball_info:
-                    log.error('--------------- volume self:{0}, others:{1}'.format(ball_v, MULTIPLE_HIDE_USERBALL*_bv))
                     if MULTIPLE_HIDE_USERBALL*_bv > ball_v:
                         continue
                     _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
-                    log.error('---------------- userball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}.'.format(uid, pow_r, _distance, (_uid, _bid, _bx, _by, _bz, _br), (ball_id, ball_x, ball_y, ball_z, ball_r)))
                     if _distance < pow_r:
+                        log.debug('---------------- eated userball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}.'.format(uid, pow_r, _distance, (_uid, _bid, _bx, _by, _bz, _br), (ball_id, ball_x, ball_y, ball_z, ball_r)))
                         # 记录吞噬/被吞噬 玩家球的个数
                         character.eat_num += 1
                         self.__eat_num[uid] += 1
@@ -264,21 +257,18 @@ class PVPRoom(object):
         yield redis.zadd(SET_RANK_ROOM_VOLUME%self.__id, uid, -_delta_ub_volume)
         # 更新自己的球体积信息
         userball_obj.updateVolume(_delta_volume)
-            #_delta_ub_data = [(uid, _bid, _br) for _bid, _br in _delta_volume.iteritems()]
         if (_hide_ub_ids or _hide_fb_ids or _delta_ub_data):
             data = [_hide_ub_ids, _hide_fb_ids, _delta_ub_data]
             #TODO broadcast
             uids = self.__users.keys()
             uids.remove(uid)
             if uids:
-                log.warn('==broadcastUserball uid:{0}, uids:{1}, data:{2}).'.format(uid, uids, data))
                 send2client(uids, 'broadcastUserball', data)
 
         _rank = yield redis.zrank(SET_RANK_ROOM_VOLUME%self.__id, uid)
         _rank = 0 if _rank is None else int(_rank) + 1 
         _total = len(self.__users)
         data.append((_rank, _total))
-        log.warn('================return uid:{0}, data:{1}).'.format(uid, data))
         defer.returnValue((NO_ERROR, data))
 
     def syncSpineball(self, uid, ball_info):
@@ -287,7 +277,6 @@ class PVPRoom(object):
             return ARGS_ERROR, None
 
         uids = self.__users.keys()
-        log.debug('================broadcastSpineball uid:{0}, users: {1}).'.format(uid, uids))
         uids.remove(uid)
         if uids:
             send2client(uids, 'broadcastSpineball', ball_info)
@@ -309,14 +298,12 @@ class PVPRoom(object):
                 yield redis.zadd(SET_RANK_PVP_WEIGHT, _uid, -_weight)
 
         yield redis.hset(HASH_PVP_ROOM_USER_NUM, self.__id, self.count)
-        log.error('------------ overPVP.  eat_num:{0}, be_eated_num.'.format(self.__eat_num, self.__be_eated_num))
 
     def _broadcastFoodball(self):
         ''' 食物球被吃后的出现规则 '''
         _uids = self.__users.keys()
         _foodball_ids = self.__hide_foodball_ids.keys()
         _new_foodball_info = self._random_xyz(_foodball_ids)
-        log.debug('===============broadcastFoodball. _room_id:{2}, _uids:{0}, _new_foodball_info:{1}.'.format(_uids, _new_foodball_info, self.__id))
         if _uids and _foodball_ids:
             send2client(_uids, 'broadcastNewFoodball', _new_foodball_info)
         self.__hide_foodball_ids = dict()
