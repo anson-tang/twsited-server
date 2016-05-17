@@ -23,14 +23,18 @@ from manager.gameuser import g_UserMgr
 class Userball(object):
     def __init__(self, uid):
         self.__uid = uid
-        self.__ball_dict = dict() # {bid: [uid,bid,bx,by,bz,br], ...}
-        self.__hide_ball_ids = list()
-
-        self.initBall()
+        self.__ball_dict = dict() # {bid: [uid,bid,bx,by,bz,br,bv,resource_id], ...}
+        #self.__hide_ball_ids = list()
+        #self.initBall()
+        self.__is_dead = False
 
     @property
     def uid(self):
         return self.__uid
+
+    @property
+    def isDead(self):
+        return self.__is_dead
 
     def initBall(self, count):
         '''
@@ -49,18 +53,21 @@ class Userball(object):
     def getAllBall(self):
         _all_ball = list()
         for _bid, _ball in self.__ball_dict.iteritems():
-            if _bid in self.__hide_ball_ids:
-                continue
+            #if _bid in self.__hide_ball_ids:
+            #    continue
             _all_ball.append(_ball)
         return _all_ball
 
-    def getHideBall(self, ball_id):
-        if ball_id not in self.__hide_ball_ids:
-            self.__hide_ball_ids.append(ball_id)
+    #def getHideBall(self, ball_id):
+    #    if ball_id not in self.__hide_ball_ids:
+    #        self.__hide_ball_ids.append(ball_id)
 
     def setHideBall(self, ball_id):
         if ball_id in self.__ball_dict:
             del self.__ball_dict[ball_id]
+        if not self.__ball_dict:
+            self.__is_dead = True
+            log.error('======================================== user is_dead. uid:{0}'.format(self.__uid))
 
     def updateVolume(self, delta_volume):
         for _bid, _volume in delta_volume.iteritems():
@@ -128,6 +135,8 @@ class PVPRoom(object):
         self.__be_eated_num = dict() # uid-num
 
         self.__call_id = reactor.callLater(REFRESH_INTERVAL_FOODBALL, self._broadcastFoodball)
+        # 整合的每帧需要广播的同步玩家球数据
+        self.__broadcast_userball_data = [[], [], []]
 
 
     @property
@@ -194,18 +203,23 @@ class PVPRoom(object):
         defer.returnValue(data)
 
     @defer.inlineCallbacks
-    def syncUserball(self, character, ball_info):
+    def syncUserball(self, character, ball_info, status):
+        uid = character.attrib_id
         if not (ball_info and isinstance(ball_info[0], list)):
             log.error("args error. uid:{0}, ball_info:{1}.".format(uid, ball_info))
             defer.returnValue((ARGS_ERROR, None))
 
-        uid = character.attrib_id
         if uid not in self.__users:
+            log.error("user not in room error. uid:{0}, room_id:{1}.".format(uid, self.__id))
             defer.returnValue((PVPROOM_LOSE, None))
 
-        log.warn("room uids:{0}, __eat_num:{1}, __be_eated_num:{2}.".format(self.__users.keys(), self.__eat_num, self.__be_eated_num))
         _hide_fb_ids = list()
         userball_obj = self.__users[uid]
+        if userball_obj.isDead:
+            log.warn("room uids:{0}, __eat_num:{1}, __be_eated_num:{2}, uid:{3}, isDead:{4}, status:{5}.".format(self.__users.keys(), self.__eat_num, self.__be_eated_num, uid, userball_obj.isDead, status))
+        if userball_obj.isDead and not status:
+            log.error("user is dead. uid:{0}, isDead:{1}, status:{2}.".format(uid, userball_obj.isDead, status))
+            defer.returnValue((USER_IS_DEAD, None))
         _hide_ub_ids, _delta_volume, ball_info = userball_obj.checkHideBall(ball_info)
 
         #_delta_br =  int(FOODBALL_RADIUS * MULTIPLE_ENLARGE_FOODBALL * 0.01)
@@ -216,7 +230,7 @@ class PVPRoom(object):
                 # 玩家球 分裂后的半径也会比食物球大吗？
                 _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
                 if _distance < pow_r:
-                    log.debug('--------------- eated foodball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}, _delta_volume:{5}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz), _delta_volume))
+                    log.warn('--------------- eated foodball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}, _delta_volume:{5}.'.format(uid, pow_r, _distance, (ball_id, ball_x, ball_y, ball_z, ball_r), (_bid, _bx, _by, _bz), _delta_volume))
                     # 自身体积增长
                     _delta_volume[ball_id] = _delta_volume.setdefault(ball_id, ball_v) + INIT_FOODBALL_VOLUME
                     _hide_fb_ids.append(_bid)
@@ -228,7 +242,9 @@ class PVPRoom(object):
                 del self.__foodball[_bid]
         # uid and ballid
         for _ub in self.__users.itervalues():
-            if _ub.uid == uid:
+            if _ub.isDead:
+                log.error('----------------- user is dead. room_id:{0}, uid:{1}, isDead:{2}'.format(self.__id, _ub.uid, _ub.isDead))
+            if _ub.uid == uid or _ub.isDead:
                 continue
             _all_ball = _ub.getAllBall()
             for _uid, _bid, _bx, _by, _bz, _br, _bv, _bs in iter(_all_ball):
@@ -238,7 +254,7 @@ class PVPRoom(object):
                         continue
                     _distance = pow(ball_x-_bx, 2) + pow(ball_y-_by, 2) + pow(ball_z-_bz, 2)
                     if _distance < pow_r:
-                        log.debug('---------------- eated userball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}.'.format(uid, pow_r, _distance, (_uid, _bid, _bx, _by, _bz, _br), (ball_id, ball_x, ball_y, ball_z, ball_r)))
+                        log.warn('---------------- eated userball uid:{0}, pow_r:{1}, _distance:{2}, source:{3}, target:{4}.'.format(uid, pow_r, _distance, (_uid, _bid, _bx, _by, _bz, _br), (ball_id, ball_x, ball_y, ball_z, ball_r)))
                         # 记录吞噬/被吞噬 玩家球的个数
                         character.eat_num += 1
                         self.__eat_num[uid] += 1
@@ -259,6 +275,7 @@ class PVPRoom(object):
             ball_v = _delta_volume[ball_id] if ball_id in _delta_volume else ball_v
             _delta_ub_data.append((uid, ball_id, ball_x, ball_y, ball_z, ball_r, ball_v, ball_s))
             _delta_ub_volume += ball_v
+        # 更新自己的球体积排行榜
         yield redis.zadd(SET_RANK_ROOM_VOLUME%self.__id, uid, -_delta_ub_volume)
         # 更新自己的球体积信息
         userball_obj.updateVolume(_delta_volume)
@@ -269,6 +286,8 @@ class PVPRoom(object):
             uids.remove(uid)
             if uids:
                 send2client(uids, 'broadcastUserball', data)
+        if _hide_ub_ids or _hide_fb_ids:
+            log.error("-------------- final hide info. room_id:{0}, uid:{1}, _hide_ub_ids:{2}, _hide_fb_ids:{3}".format(self.__id, uid, _hide_ub_ids, _hide_fb_ids))
 
         _rank = yield redis.zrank(SET_RANK_ROOM_VOLUME%self.__id, uid)
         _rank = 0 if _rank is None else int(_rank) + 1 

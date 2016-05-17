@@ -14,5 +14,6 @@ CONNECTION_LOSE = 3 # 失去连接 客户端请重新登录
 PVPROOM_LOSE = 4 # 不在PVP模式，客户端重新进入PVP
 ARGS_ERROR = 5 # 参数异常
 PVP_END_TIME_ERROR = 6 # PVP已经结束
+USER_IS_DEAD = 7 # 玩家球已经全部被吃了
 
 

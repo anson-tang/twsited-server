@@ -58,7 +58,8 @@ def syncUserball(p, req):
     if not room_obj:
         defer.returnValue((PVPROOM_LOSE, None))
 
-    err, data = yield room_obj.syncUserball(user.attrib, req)
+    log.warn('============req:{0}'.format(req))
+    err, data = yield room_obj.syncUserball(user.attrib, req[0], req[1])
     defer.returnValue((err, data))
 
 

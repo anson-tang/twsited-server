@@ -39,7 +39,7 @@ def __broadcast(user_remain, func, args):
                     if hasattr(_user.p, 'transport'):
                         if _user.p.transport:
                             _user.p.send(func, args)
-                            log.warn('uid:{0}, func:{1}, args:{2}'.format(_user.uid, func, args))
+                            log.warn('================uid:{0}, func:{1}, args:{2}'.format(_user.uid, func, args))
                         else:
                             log.warn('__broadcast. uid:{0}, unknown t:{1}.'.format(_user.uid, _user.p.transport))
                             g_UserMgr.del_zombie_user( _user.uid )
@@ -56,3 +56,6 @@ def __broadcast(user_remain, func, args):
                 break
         else:
             reactor.callLater(1, __broadcast, user_remain, func, args)
+
+def func_broadcast():
+    pass
