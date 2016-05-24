@@ -69,6 +69,9 @@ class Userball(object):
             self.__is_dead = True
             log.error('======================================== user is_dead. uid:{0}'.format(self.__uid))
 
+    def revive(self):
+        self.__is_dead = False
+
     def updateVolume(self, delta_volume):
         for _bid, _volume in delta_volume.iteritems():
             self.__ball_dict[_bid][6] = _volume
@@ -217,9 +220,11 @@ class PVPRoom(object):
         userball_obj = self.__users[uid]
         if userball_obj.isDead:
             log.warn("room uids:{0}, __eat_num:{1}, __be_eated_num:{2}, uid:{3}, isDead:{4}, status:{5}.".format(self.__users.keys(), self.__eat_num, self.__be_eated_num, uid, userball_obj.isDead, status))
-        if userball_obj.isDead and not status:
-            log.error("user is dead. uid:{0}, isDead:{1}, status:{2}.".format(uid, userball_obj.isDead, status))
-            defer.returnValue((USER_IS_DEAD, None))
+            if status:
+                userball_obj.revive()
+            else:
+                log.error("user is dead. uid:{0}, isDead:{1}, status:{2}.".format(uid, userball_obj.isDead, status))
+                defer.returnValue((USER_IS_DEAD, None))
         _hide_ub_ids, _delta_volume, ball_info = userball_obj.checkHideBall(ball_info)
 
         #_delta_br =  int(FOODBALL_RADIUS * MULTIPLE_ENLARGE_FOODBALL * 0.01)
