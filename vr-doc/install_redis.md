@@ -11,9 +11,13 @@
 10) $ service redis_6379 status
 
 -------------------------------
-open bind 127.0.0.1
-update requirepass
-update port
-update rename-command CONFIG ""
-run not root
-redis-cli -p 10379 -a Redis.Passwd
+$ vim /etc/redis/6379.conf
+bind 127.0.0.1
+requirepass <Redis.Passwd>
+port 10379
+rename-command CONFIG ""
+#run not root
+redis-server -c /etc/redis/6379.conf
+
+# client登录
+$ redis-cli -p 10379 -a Redis.Passwd

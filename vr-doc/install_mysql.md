@@ -2,6 +2,10 @@ do it as
 https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-14-04
 http://www.devopsservice.com/installation-of-mysql-server-5-7-on-ubuntu-14-04/
 
+---------------------------------
+ImportError: No module named MySQLdb
+$ sudo apt-get install python-mysqldb
+
 root/abcd.1234
 ----------------------------------
 1) shell> sudo wget http://dev.mysql.com/get/mysql-apt-config_0.6.0-1_all.deb
@@ -16,11 +20,7 @@ root/abcd.1234
 
 
 ---------------------------------
-ImportError: No module named MySQLdb
-$ sudo apt-get install python-mysqldb
-
-
----------------------------------
+$ mysql -uroot -p
 1) mysql> create database vr_userdb character set utf8 collate utf8_bin;
 Query OK, 1 row affected (0.00 sec)
 2) mysql> create user 'vr'@'127.0.0.1' identified by 'Vr-0#Ser.ver';
