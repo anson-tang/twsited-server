@@ -18,7 +18,7 @@ def send2client(uids, func, args):
 @route()
 def broadcast(p, req):
     func, args = req
-    _remain = g_UserMgr.all_users()
+    _remain = g_UserMgr.connect_users()
     __broadcast(_remain, func, args)
 
 @route()

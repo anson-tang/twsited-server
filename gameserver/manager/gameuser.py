@@ -51,7 +51,7 @@ class GameUserMgr(object):
                 _uids.append( _user.uid )
         return _uids
 
-    def all_users(self):
+    def connect_users(self):
         '''
         @summary: 返回temp_lost为False即还在线的在线玩家,用于广播, 其中不含五分钟的玩家, 
         '''
